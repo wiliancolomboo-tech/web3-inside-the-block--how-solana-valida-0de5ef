@@ -1,0 +1,16 @@
+# File: docker-compose.yml
+version: '3.8'
+
+services:
+  solana-block-engine-monitor:
+    build: .
+    restart: unless-stopped
+    environment:
+      - RPC_URL=https://api.mainnet-beta.solana.com
+      - SLACK_WEBHOOK=${SLACK_WEBHOOK:-}
+    command: ["analyze", "--rpc", "https://api.mainnet-beta.solana.com"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"

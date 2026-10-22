@@ -1,0 +1,26 @@
+# File: Dockerfile
+FROM rust:1.77-bullseye as builder
+WORKDIR /usr/src/sbeta
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+RUN cargo build --release
+
+FROM node:20-slim as ts-builder
+WORKDIR /usr/src/cli
+COPY package.json package-lock.json tsconfig.json ./
+COPY src/cli ./src/cli
+RUN npm ci && npm run build
+
+FROM debian:bullseye-slim
+RUN apt-get update && apt-get install -y ca-certificates curl && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=builder /usr/src/sbeta/target/release/sbeta_engine /app/sbeta_engine
+COPY --from=ts-builder /usr/src/cli/dist /app/cli
+COPY --from=ts-builder /usr/src/cli/node_modules /app/node_modules
+COPY --from=ts-builder /usr/src/cli/package.json /app/package.json
+
+ENV RPC_URL="https://api.mainnet-beta.solana.com"
+ENV SLACK_WEBHOOK=""
+
+EXPOSE 8080
+ENTRYPOINT ["node", "/app/cli/inspector.js", "analyze"]

@@ -1,0 +1,39 @@
+flowchart TD
+    subgraph ClientLayer["Client & Network Ingress"]
+        C1[Client Transaction] -->|QUIC / UDP Stream| TPU[TPU Ingress: Port 8003]
+        J1[Searcher MEV Bundle] -->|gRPC / Block Engine| JBE[Jito Relayer / Block Engine]
+    end
+
+    subgraph AgaveValidator["Validator Processing Pipeline (Agave / Jito-Solana)"]
+        TPU -->|Packet Batches| SV[sigverify Stage: GPU/AVX-512]
+        SV -->|Verified Packets| BF[Banking Filter & Deduplication]
+        
+        subgraph SchedulingStage["Banking Stage: Transaction Scheduler"]
+            BF --> CS{Central Scheduler / PMM}
+            CS -->|Lock Contention Check| ALM[Account Lock Matrix: Read/Write Sets]
+            CS -->|Priority Sort: Fee / CU| PQ[Priority Queues: Min-Heap]
+            JBE -->|Atomic Bundle Preemption| JBA[Jito Bundle Arbitrator]
+            JBA -->|Sequential Locked Batch| WE[Worker Execution Threads]
+            PQ -->|Greedy Conflict-Free Dispatch| WE
+            ALM -.->|Block Conflicting Accs| CS
+        end
+
+        subgraph ExecutionEngine["Sealevel Parallel Execution"]
+            WE --> VM1[Bank Thread 1: Read/Write Engine]
+            WE --> VM2[Bank Thread 2: Read/Write Engine]
+            WE --> VMn[Bank Thread N: Read/Write Engine]
+            VM1 & VM2 & VMn --> StateCommit[Bank State Accumulator]
+        end
+    end
+
+    subgraph BlockAssemblyTurbine["Block Packing & Shred Emission"]
+        StateCommit --> BlockPacker[Block Packer: 48M Compute Cap]
+        BlockPacker --> Shredder[Shred Generation & Erasure Coding]
+        Shredder --> Turbine[Turbine Tree Broadcast to Network]
+    end
+
+    subgraph TelemetryEnterprise["Enterprise Observability & Alerts"]
+        BlockPacker -.-> EngineMetrics[Metrics Engine]
+        EngineMetrics --> AlertWorker[Alert Dispatcher]
+        AlertWorker -->|Webhook Payload| DiscordSlack[Slack / Discord / Ops Webhook]
+    end
