@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  solana-order-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile.engine
+    container_name: sbis-order-engine
+    restart: always
+    environment:
+      - RUST_LOG=info
+    ports:
+      - "9100:9100"
+
+  solana-block-inspector:
+    build:
+      context: .
+      dockerfile: Dockerfile.inspector
+    container_name: sbis-block-inspector
+    restart: always
+    environment:
+      - SOLANA_RPC_HTTP=https://api.mainnet-beta.solana.com
+      - ENTERPRISE_WEBHOOK_URL=${ENTERPRISE_WEBHOOK_URL}
+      - CONTENTION_ALERT_THRESHOLD=20
+    depends_on:
+      - solana-order-engine

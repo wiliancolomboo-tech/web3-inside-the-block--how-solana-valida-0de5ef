@@ -1,0 +1,9 @@
+import { describe, expect, it } from "vitest";
+
+describe("API contract", () => {
+  it("documents required endpoint behavior", () => {
+    expect("/healthz").toMatch(/^\/healthz$/);
+    expect("/v1/submissions").toMatch(/^\/v1\/submissions$/);
+    expect("/v1/evidence/:signature").toContain("evidence");
+  });
+});

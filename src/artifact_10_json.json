@@ -1,0 +1,22 @@
+{
+  "name": "solana-block-telemetry-cli",
+  "version": "1.0.0",
+  "description": "Production Validator Block Ingestion and Account Contention Auditor",
+  "main": "dist/index.js",
+  "bin": {
+    "solana-block-audit": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.91.0",
+    "axios": "^1.6.8",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "typescript": "^5.4.5"
+  }
+}

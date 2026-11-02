@@ -1,0 +1,17 @@
+[package]
+name = "solana-block-ordering-engine"
+version = "1.0.0"
+edition = "2021"
+authors = ["Principal Solana Systems Architect"]
+description = "Deterministic Banking Stage Scheduler, Lock Engine, and MEV Bundle Sequencer for Solana"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+thiserror = "1.0"
+log = "0.4"
+env_logger = "0.10"
+
+[dev-dependencies]
+tokio = { version = "1.35", features = ["full"] }

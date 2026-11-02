@@ -1,0 +1,7 @@
+solana-block-analyzer/
+├── package.json
+├── tsconfig.json
+└── src/
+    ├── index.ts
+    ├── analyzer.ts
+    └── alert_webhook.ts

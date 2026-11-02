@@ -1,0 +1,8 @@
+Client
+  -> RPC / TPU
+  -> leader ingress and banking stages
+  -> transaction validation
+  -> account locking and scheduling
+  -> PoH recording / block production
+  -> replay and voting
+  -> RPC-visible block

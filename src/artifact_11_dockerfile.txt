@@ -1,0 +1,11 @@
+FROM rust:1.77-bullseye as builder
+WORKDIR /usr/src/solana-ordering-engine
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && echo "fn main() {}" > src/main.rs && cargo build --release || true
+COPY . .
+RUN cargo build --release
+
+FROM debian:bullseye-slim
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /usr/src/solana-ordering-engine/target/release/solana-block-ordering-engine /usr/local/bin/
+ENTRYPOINT ["/usr/local/bin/solana-block-ordering-engine"]

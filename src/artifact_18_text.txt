@@ -1,0 +1,5 @@
+We engineered & open-sourced `blockorder-core`: a deterministic BankingStage simulator and lock-contention profiler for Solana teams.
+
+Pinpoint AMM write-lock serialization & optimize priority gas bidding in real time.
+
+Built for the community & @solana developers. Code & Docker engine live now! 🚀

@@ -1,0 +1,7 @@
+# HELP solana_auditor_latest_slot Latest slot audited for transaction ordering
+# TYPE solana_auditor_latest_slot gauge
+solana_auditor_latest_slot 265000100
+
+# HELP solana_auditor_ordering_inversions_total Total fee-density ordering inversions detected without write-lock collisions
+# TYPE solana_auditor_ordering_inversions_total counter
+solana_auditor_ordering_inversions_total 0

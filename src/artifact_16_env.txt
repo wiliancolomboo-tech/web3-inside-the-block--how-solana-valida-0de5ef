@@ -1,0 +1,4 @@
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+SOLANA_WS_URL=wss://api.mainnet-beta.solana.com
+ENTERPRISE_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+CONTENTION_THRESHOLD=25

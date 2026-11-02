@@ -1,0 +1,12 @@
+🧵 1/3: How do Solana validators order transactions inside a block? 
+Hint: There is NO traditional mempool. Instead, Gulf Stream forwards packets directly to the upcoming leader's TPU, where multi-threaded BankingStage & Jito MEV engines construct the block in microseconds. Here's a deep dive 👇 #Solana #MEV
+
+🧵 2/3: Priority fees alone DON'T guarantee block placement!
+Solana relies on an Account Lock Directed Acyclic Graph (DAG):
+• Read-locks run in parallel across multi-worker threads.
+• Write-locks enforce strict serialization.
+• Hit the 12M Compute Unit cap on a single account? Your transaction gets dropped or deferred, no matter how high your fee.
+
+🧵 3/3: Over 85% of stake runs Jito-Solana, introducing out-of-band tip auctions executed at the top of the block before TPU transactions pack.
+We built & open-sourced BlockScope: a deterministic BankingStage scheduler, Jito bundle simulator & live telemetry sentinel.
+Check it out: https://github.com/sponsor-org/solana-inside-the-block 🚀

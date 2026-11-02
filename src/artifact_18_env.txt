@@ -1,0 +1,6 @@
+PORT=8080
+SOLANA_RPC_ENDPOINT=https://api.mainnet-beta.solana.com
+SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+RESEND_API_KEY=re_1234567890abcdef
+RESEND_FROM_EMAIL=alerts@enterprise.solana
+ALERT_EMAIL_RECIPIENT=devops@enterprise.solana

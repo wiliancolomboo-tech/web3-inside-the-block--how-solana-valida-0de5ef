@@ -1,0 +1,97 @@
+import Fastify from "fastify";
+import cors from "@fastify/cors";
+import { z } from "zod";
+import { config } from "./config.js";
+import {
+  getEvidence,
+  getSubmission,
+  saveEvidence,
+  saveSubmission
+} from "./db.js";
+import { notify } from "./notifier.js";
+import { resolveSignature } from "./solana.js";
+
+const app = Fastify({ logger: true });
+await app.register(cors);
+
+const registerSchema = z.object({
+  signature: z.string().min(32).max(100),
+  submittedAtMs: z.number().int().positive().optional()
+});
+
+app.get("/healthz", async () => ({
+  ok: true,
+  service: "inside-the-block",
+  timestamp: new Date().toISOString()
+}));
+
+app.get("/metrics", async (_request, reply) => {
+  reply.type("text/plain").send(
+    "# HELP inside_the_block_up Service availability\n" +
+    "# TYPE inside_the_block_up gauge\n" +
+    "inside_the_block_up 1\n"
+  );
+});
+
+app.post("/v1/submissions", async (request, reply) => {
+  const parsed = registerSchema.safeParse(request.body);
+
+  if (!parsed.success) {
+    return reply.code(400).send({
+      error: "invalid_request",
+      details: parsed.error.flatten()
+    });
+  }
+
+  const submittedAtMs = parsed.data.submittedAtMs ?? Date.now();
+
+  saveSubmission(
+    parsed.data.signature,
+    submittedAtMs,
+    config.SOLANA_RPC_URL
+  );
+
+  return reply.code(202).send({
+    accepted: true,
+    signature: parsed.data.signature,
+    submittedAtMs
+  });
+});
+
+app.post("/v1/submissions/:signature/resolve", async (request, reply) => {
+  const signature = (request.params as { signature: string }).signature;
+
+  if (!getSubmission(signature)) {
+    return reply.code(404).send({ error: "submission_not_found" });
+  }
+
+  try {
+    const record = await resolveSignature(signature);
+    saveEvidence(record);
+
+    if (
+      record.latencyMs !== undefined &&
+      record.latencyMs >= config.ALERT_LATENCY_MS
+    ) {
+      await notify(record);
+    }
+
+    return record;
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(502).send({
+      error: "rpc_resolution_failed",
+      message: error instanceof Error ? error.message : "unknown error"
+    });
+  }
+});
+
+app.get("/v1/evidence/:signature", async (request, reply) => {
+  const signature = (request.params as { signature: string }).signature;
+  const evidence = getEvidence(signature);
+
+  if (!evidence) return reply.code(404).send({ error: "evidence_not_found" });
+  return evidence;
+});
+
+app.listen({ port: config.PORT, host: "0.0.0.0" });

@@ -1,0 +1,15 @@
+import "dotenv/config";
+import { z } from "zod";
+
+const schema = z.object({
+  PORT: z.coerce.number().int().positive().default(8080),
+  SOLANA_RPC_URL: z.string().url().default("https://api.devnet.solana.com"),
+  DB_PATH: z.string().default("./data/inside-the-block.db"),
+  RESEND_API_KEY: z.string().optional(),
+  ALERT_EMAIL_FROM: z.string().email().optional(),
+  ALERT_EMAIL_TO: z.string().email().optional(),
+  ALERT_WEBHOOK_URL: z.string().url().optional(),
+  ALERT_LATENCY_MS: z.coerce.number().int().nonnegative().default(5000)
+});
+
+export const config = schema.parse(process.env);

@@ -1,0 +1,6 @@
+{
+  "status": "HEALTHY",
+  "service": "orderflow-engine",
+  "poh_continuous_streaming": true,
+  "banking_stage_queue_depth": 0
+}

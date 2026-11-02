@@ -1,0 +1,4 @@
+SOLANA_RPC_URL="https://api.mainnet-beta.solana.com"
+SLACK_WEBHOOK_URL="https://api.example.com/webhooks/alerts/placeholder"
+RESEND_API_KEY="re_123456789abcdef"
+ALERT_EMAIL_TO="ops@validator-enterprise.com"

@@ -1,0 +1,5 @@
+Fastify replicas
+  -> PostgreSQL primary
+  -> read replicas
+  -> object-storage evidence archive
+  -> queue-backed resolver workers

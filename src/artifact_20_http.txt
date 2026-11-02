@@ -1,0 +1,8 @@
+HTTP/1.1 200 OK
+   Content-Type: text/plain; version=0.0.4
+   Content-Length: 356
+
+   # HELP solana_blockscope_slots_total Total simulated slots processed
+   # TYPE solana_blockscope_slots_total counter
+   solana_blockscope_slots_total 1
+   ...

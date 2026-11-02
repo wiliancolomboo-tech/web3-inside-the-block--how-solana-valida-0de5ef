@@ -1,0 +1,5 @@
+validator-block-oracle/
+├── package.json
+├── tsconfig.json
+└── src/
+    └── index.ts

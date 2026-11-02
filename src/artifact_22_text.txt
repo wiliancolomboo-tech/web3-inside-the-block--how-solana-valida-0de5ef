@@ -1,0 +1,6 @@
+3/ To unpack this, we built the Solana Block Execution Spec Engine:
+⚡ Multi-threaded BankingStage & Sealevel lock simulator in Rust
+🔍 Live Mainnet Block forensic decompiler in TypeScript
+🚨 Discord/Slack/Resend enterprise telemetry
+
+Explore the repo: https://github.com/enterprise/solana-block-spec-engine

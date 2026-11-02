@@ -1,0 +1,47 @@
+import { describe, expect, it } from "vitest";
+import { createEvidence } from "../src/evidence.js";
+
+const base = {
+  signature: "5".repeat(88),
+  submittedAtMs: 1_000,
+  rpcUrl: "https://api.devnet.solana.com",
+  status: "finalized" as const,
+  slot: 42,
+  transactionIndex: 3,
+  finalizedAtMs: 2_500,
+  previousHash: null
+};
+
+describe("evidence engine", () => {
+  it("creates deterministic hash-linked evidence", () => {
+    const first = createEvidence(base);
+    const second = createEvidence(base);
+
+    expect(first.evidenceHash).toBe(second.evidenceHash);
+    expect(first.latencyMs).toBe(1_500);
+    expect(first.schemaVersion).toBe(1);
+  });
+
+  it("rejects invalid signatures", () => {
+    expect(() =>
+      createEvidence({ ...base, signature: "bad" })
+    ).toThrow("Invalid Solana transaction signature");
+  });
+
+  it("rejects negative latency", () => {
+    expect(() =>
+      createEvidence({
+        ...base,
+        submittedAtMs: 2_000,
+        finalizedAtMs: 1_000
+      })
+    ).toThrow("finalizedAtMs cannot precede submittedAtMs");
+  });
+
+  it("changes the hash when evidence changes", () => {
+    const a = createEvidence(base);
+    const b = createEvidence({ ...base, transactionIndex: 4 });
+
+    expect(a.evidenceHash).not.toBe(b.evidenceHash);
+  });
+});

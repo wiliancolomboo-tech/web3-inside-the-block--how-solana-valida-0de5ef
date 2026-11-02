@@ -1,0 +1,15 @@
+slot
+block_time
+signature
+transaction_index
+success
+error_json
+compute_units_consumed
+compute_unit_price
+fee_lamports
+account_keys
+writable_account_keys
+program_ids
+recent_blockhash
+confirmation_status
+ordering_explanation

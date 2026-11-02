@@ -1,0 +1,17 @@
+# Multi-stage production container
+FROM rust:1.77-bullseye as builder
+WORKDIR /usr/src/sbe
+COPY Cargo.toml ./
+RUN mkdir src tests && echo "pub fn dummy() {}" > src/engine.rs && echo "fn main() {}" > src/main.rs
+RUN cargo build --release || true
+COPY src ./src
+COPY tests ./tests
+RUN touch src/engine.rs src/main.rs
+RUN cargo build --release
+
+FROM debian:bullseye-slim
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=builder /usr/src/sbe/target/release/sbe-cli /usr/local/bin/sbe-cli
+ENTRYPOINT ["/usr/local/bin/sbe-cli"]
+CMD ["simulate", "--tx-count", "200", "--threads", "4"]

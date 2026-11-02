@@ -1,0 +1,7 @@
+running 4 tests
+test test_account_compute_unit_limit_capping ... ok
+test test_global_block_compute_limit_capping ... ok
+test test_jito_bundle_preempts_high_microlamport_tx ... ok
+test test_parallel_uncontended_transactions_execute_without_delay ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored

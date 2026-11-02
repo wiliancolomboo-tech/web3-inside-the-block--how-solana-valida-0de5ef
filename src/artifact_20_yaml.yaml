@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  solana-scheduler-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: solana-block-scheduler-engine
+    restart: unless-stopped
+    environment:
+      - RUST_LOG=info
+      - SOLANA_RPC_ENDPOINT=https://api.mainnet-beta.solana.com
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - ALERT_EMAIL_RECIPIENT=${ALERT_EMAIL_RECIPIENT}
+    ports:
+      - "8080:8080"
+      - "9100:9100"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"

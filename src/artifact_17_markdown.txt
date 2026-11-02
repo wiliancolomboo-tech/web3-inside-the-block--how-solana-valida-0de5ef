@@ -1,0 +1,18 @@
+1/4 🧵 Ever wondered why your high-priority Solana tx STILL gets dropped during high volatility? 
+
+Solana does NOT have an EVM-style mempool, nor does it run on pure First-Come-First-Served (FCFS). 
+
+Here is what ACTUALLY happens inside the block during validator BankingStage 👇
+
+2/4 ⚙️ A Solana validator's Central Scheduler orchestrates transactions across worker threads using a conflict graph:
+- 48M Compute Units per block limit
+- 12M CU write-lock limit per individual account!
+- Priority is scored in micro-lamports per CU (`Fee / Requested CU`)
+
+If you hit a saturated AMM pool, no amount of priority fee can override the 12M lock ceiling.
+
+3/4 🚀 Enter Jito-Solana: Over 85% of validator stake runs Jito, which interleaves atomic searcher bundles ahead of native TPU packets via out-of-band auctions. If your transaction conflicts with bundle write locks, you are parked in a stall queue!
+
+4/4 🛠️ We built S-BASE: an open-source Rust BankingStage simulator & live block contention telemetry daemon. Model lock graph contention, simulate block packing, and price priority fees accurately.
+
+Check out our 1st-place bounty submission & code: https://github.com/solana-labs/solana/tree/master/core/src/banking_stage

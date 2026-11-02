@@ -1,0 +1,9 @@
+running 5 tests
+test test_account_lock_table_conflict_detection ... ok
+test test_priority_queue_fee_sorting ... ok
+test test_banking_stage_independent_parallel_execution ... ok
+test test_banking_stage_write_lock_contention_ordering ... ok
+test test_jito_bundle_atomic_preemption ... ok
+test test_account_compute_budget_saturation_eviction ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; finished in 0.02s

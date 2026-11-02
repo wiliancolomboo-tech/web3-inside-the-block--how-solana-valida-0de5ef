@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  sbei-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sbei-banking-engine
+    ports:
+      - "8080:8080"
+    environment:
+      - RUST_LOG=info
+      - SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '4.00'
+          memory: 4096M

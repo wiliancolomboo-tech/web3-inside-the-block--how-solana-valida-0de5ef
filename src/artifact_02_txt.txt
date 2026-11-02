@@ -1,0 +1,32 @@
++----------------------------------------------------------------------------------------------------+
+|                                    SOLANA CLUSTER (MAINNET-BETA)                                   |
+|                                                                                                    |
+|    +-------------------------+     Stake-Weighted QUIC      +---------------------------------+    |
+|    | Institutional Client /  | ==========================> | Current Slot Validator Leader   |    |
+|    | Automated Searcher Bot  |                             | (e.g. Jito-Solana / Agave Node) |    |
+|    +-------------------------+                             +---------------------------------+    |
++-----------------------------------------------------------------------------|----------------------+
+                                                                              | Real-Time Geyser Stream
+                                                                              | / WebSocket Block Feed
+                                                                              v
++----------------------------------------------------------------------------------------------------+
+|                         ENTERPRISE BLOCK INSPECTOR & SCHEDULER ANALYZER ENGINE                     |
+|                                                                                                    |
+|   +--------------------------------------------------------------------------------------------+   |
+|   | 1. Ingestion Pipeline: Zero-copy deserialization of Slots, Block Rewards, & Execution Data |   |
+|   +--------------------------------------------------------------------------------------------+   |
+|   | 2. Replay & Simulation Engine:                                                             |   |
+|   |    - Reconstructs BankingStage write-lock dependency graph                                 |   |
+|   |    - Computes effective priority fee per Compute Unit (CU) vs. Jito out-of-band tip        |   |
+|   |    - Classifies transaction placement: Early Entry, Mid Entry, Tail Drop                   |   |
+|   +--------------------------------------------------------------------------------------------+   |
+|   | 3. Risk & Degradation Heuristics: Write-lock saturation (>12M CU limit per account)        |   |
++----------------------------------------------------------------------------------------------------+
+                                      |                                   |
+           Metrics Dispatched via     |                                   | Critical Failure / Starvation
+           HTTPS Bearer Auth          |                                   | JSON Payload Alert
+                                      v                                   v
+             +----------------------------------+               +----------------------------------+
+             |   Prometheus / Grafana Datadog   |               |     Enterprise Alerts Router     |
+             |   Real-Time Banking Metrics      |               |  (Slack, Discord, Resend API)    |
+             +----------------------------------+               +----------------------------------+

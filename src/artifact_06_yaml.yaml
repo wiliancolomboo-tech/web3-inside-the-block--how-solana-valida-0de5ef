@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  solana-scheduler-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: solana-block-orderer
+    restart: unless-stopped
+    ports:
+      - "8080:8080" # Healthcheck & REST Telemetry API
+      - "9100:9100" # Prometheus Metrics Exporter
+    environment:
+      - RUST_LOG=info
+      - SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+      - WORKER_THREADS=8
+      - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/dummy_enterprise_webhook
+      - MAX_BLOCK_CU=48000000
+      - MAX_ACCOUNT_CU=12000000
+    deploy:
+      resources:
+        limits:
+          cpus: "8.0"
+          memory: 16G
+        reservations:
+          cpus: "4.0"
+          memory: 8G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"

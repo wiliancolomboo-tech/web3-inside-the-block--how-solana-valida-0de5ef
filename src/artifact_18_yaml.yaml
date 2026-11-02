@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  sbei-inspector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sbei-banking-stage-monitor
+    restart: unless-stopped
+    environment:
+      - RUST_LOG=info,sbei_core=debug,sbei_cli=debug
+      - ENTERPRISE_WEBHOOK_URL=https://discord.com/api/webhooks/your-channel/your-webhook-token
+    command: ["--threads", "8", "--slots", "1000"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/healthz || exit 0"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"

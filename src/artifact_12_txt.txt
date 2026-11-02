@@ -1,0 +1,16 @@
+TROUBLESHOOTING RUNBOOK
+                                             │
+                       Is the tx landing within the target slot?
+                                      ├── YES ──> Status: Nominal
+                                      └── NO
+                                           │
+                         Check Write-Lock Contention on Accounts
+                                           │
+                     ┌─────────────────────┴─────────────────────┐
+                     ▼                                           ▼
+             Account CU > 12M?                           Colliding with AMM Vault?
+                     │                                           │
+          [Root Cause: Hotspotting]                 [Root Cause: Parallel Lock Saturation]
+          Action: Shard state across                Action: Submit via Jito Bundle
+          distinct PDAs using nonce                 Auction or interleave with non-
+          or segment seeds.                         contending instructions.

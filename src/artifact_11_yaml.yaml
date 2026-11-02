@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  solana-block-inspector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: solana-block-inspector
+    restart: unless-stopped
+    environment:
+      - RUST_LOG=info
+      - RPC_URL=https://api.mainnet-beta.solana.com
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - ALERT_EMAIL=${ALERT_EMAIL:-}
+    ports:
+      - "8080:8080"
+    command: ["--rpc-url", "https://api.mainnet-beta.solana.com", "--threads", "8"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"

@@ -1,0 +1,18 @@
+🧵 1/3
+Ever wondered what ACTUALLY happens inside a Solana validator in the 400ms between slot ticks?
+There is NO global mempool. 
+
+Here is how the Sealevel banking stage, multi-threaded priority queues, and Jito bundles order your transactions under the hood 👇
+
+🧵 2/3
+1. Ingress: Transactions hit TPU via QUIC & are verified across worker threads.
+2. Routing: Addresses hash to worker queues. Priority fee per CU ($MicroLamports / Requested CU) sorts the heap.
+3. Lock Matrix: Transactions execute ONLY if their write-locks don't collide AND account limits (<12M CU) aren't hit!
+
+🧵 3/3
+We built an open-source, deterministic Sealevel & Jito Block Engine simulator with real-time Discord/Slack alerts and Resend slot digests.
+
+Complete architecture, benchmarks & code:
+github.com/enterprise-solana/inside-the-block-ordering
+
+Demystifying the Solana runtime for builders! ⚡️ @solana @jito_labs

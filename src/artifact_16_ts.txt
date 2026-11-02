@@ -1,0 +1,37 @@
+import {
+  Connection,
+  Keypair,
+  SystemProgram,
+  Transaction
+} from "@solana/web3.js";
+
+const rpc = "https://api.devnet.solana.com";
+const connection = new Connection(rpc, "confirmed");
+const payer = Keypair.generate();
+const recipient = Keypair.generate().publicKey;
+
+const transaction = new Transaction().add(
+  SystemProgram.transfer({
+    fromPubkey: payer.publicKey,
+    toPubkey: recipient,
+    lamports: 1
+  })
+);
+
+const signature = await connection.sendTransaction(transaction, [payer]);
+
+await fetch("http://localhost:8080/v1/submissions", {
+  method: "POST",
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify({
+    signature,
+    submittedAtMs: Date.now()
+  })
+});
+
+await connection.confirmTransaction(signature, "finalized");
+
+await fetch(
+  `http://localhost:8080/v1/submissions/${signature}/resolve`,
+  { method: "POST" }
+);

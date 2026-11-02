@@ -1,0 +1,7 @@
+{
+  "status": "HEALTHY",
+  "engine": "sbids-core",
+  "banking_stage": "ACTIVE",
+  "active_write_locks": 0,
+  "queue_depth": 0
+}

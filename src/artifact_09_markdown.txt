@@ -1,0 +1,15 @@
+1/4 🧵 Think Solana transaction ordering is just "first-come, first-served" (FCFS) spam? Think again. 
+
+Here is the deep engineering truth of what actually happens inside the Solana validator's BankingStage, how transactions get ordered, and why your high-priority tx still drops: 👇
+
+2/4 ⚡ Solana doesn't have a global EVM mempool. Instead, the TPU pipeline processes state concurrently:
+1. SWQoS allocates bandwidth based on validator stake via QUIC.
+2. Read/Write lock arbiters prevent concurrent writes to the same account.
+3. ComputeUnitPrice determines queue precedence.
+
+3/4 🚫 The #1 reason liquidations & swaps fail during high congestion isn't low gas—it's WRITE-LOCK SATURATION. 
+A single account can only consume 12M Compute Units per block. Once that ceiling is reached, higher priority fees won't help you. You are locked out until the next slot.
+
+4/4 🛠️ We engineered the open-source "SolOrderEngine"—a complete Rust BankingStage scheduler & CLI forensic analyzer that uncovers lock bottlenecks and Jito bundle dynamics in real-time. 
+
+Explore the architecture & run the simulator: https://github.com/sponsor/sol-order-engine

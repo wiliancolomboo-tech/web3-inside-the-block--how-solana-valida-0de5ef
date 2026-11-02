@@ -1,0 +1,5 @@
+RUST_LOG=info
+SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1234/XXXX
+RESEND_API_KEY=re_live_enterprise_secret_key_123456
+ALERT_EMAIL_RECIPIENT=risk-desk@fund.internal

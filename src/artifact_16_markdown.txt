@@ -1,0 +1,15 @@
+🧵 1/3 How do Solana validators REALLY order your transactions inside a block?
+Forget the EVM mempool mental model. Solana has no global mempool; transactions travel via QUIC directly into Gulf Stream & the Agave Central Scheduler.
+
+Here is the exact anatomy of block space 🧵👇
+
+🧵 2/3 Two rules dictate execution:
+1. Priority Score = (Micro-Lamports Priority Fee) / (CU Limit)
+2. Read/Write Lock Graph: Transactions targeting isolated accounts run in parallel on separate Sealevel threads.
+Contention on the SAME write account forces sequential delays!
+
+🧵 3/3 Plus: Out-of-band Jito MEV bundles bypass standard scheduler queues for atomic execution at the top of the block.
+We open-sourced the definitive Agave Scheduler Dissector & telemetry engine! 
+
+Check out our 1st-place bounty submission: https://github.com/sponsor/solana-scheduler-dissector
+#Solana #Rust #MEV #DeFi

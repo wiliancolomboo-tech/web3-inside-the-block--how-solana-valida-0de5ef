@@ -1,0 +1,20 @@
+🧵 1/3
+Ever wondered what ACTUALLY happens inside a Solana validator in the 400ms it takes to build a block? 
+
+Forget Ethereum's simple mempool. Solana’s BankingStage is a multi-threaded parallel engine governed by Sealevel read/write locks, SWQoS, and continuous PoH micro-ticks. 
+
+Here’s the complete teardown 👇
+
+🧵 2/3
+Standard Agave TPU worker threads don't sort globally—they lock accounts dynamically! 
+If 2 transactions touch the same write account (e.g. Phoenix or Raydium pool), they CANNOT execute in parallel. 
+
+Meanwhile, @jito_labs bundles bypass the standard queue via out-of-protocol tip auctions.
+
+🧵 3/3
+To solve starvation & fee inversion, we built the Solana Block Engine Forensics Suite (SBE-FS):
+✅ Complete Rust BankingStage Scheduler simulator
+✅ Sealevel concurrent lock contention analyzer
+✅ Real-time Slack/Discord MEV & starvation telemetry
+
+Inspect the open-source code: https://github.com/sponsor/inside-the-block-solana

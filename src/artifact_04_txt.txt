@@ -1,0 +1,24 @@
++-----------------------------------------------------------------------------------+
+|                          SOLANA VALIDATOR NODE ENVIRONMENT                        |
+|                                                                                   |
+|  +--------------------+    Raw Blocks    +-------------------------------------+  |
+|  | Solana Core / Jito | ───────────────> | solana-ordering-core (Rust Engine)  |  |
+|  | Validator v1.18.x  |                  | - Central Scheduler Simulation      |  |
+|  +--------------------+                  | - Read/Write Conflict Resolution    |  |
+|                                          +-------------------------------------+  |
+|                                                             │                     |
+|                                                             ▼                     |
+|                                          +-------------------------------------+  |
+|                                          | Block Inspector Monitor Service     |  |
+|                                          | (TypeScript / Node.js Engine)       |  |
+|                                          +-------------------------------------+  |
++-------------------------------------------------------------│---------------------+
+                                                              │
+                                     Secure TLS Webhooks / gRPC Stream
+                                                              │
+                     ┌────────────────────────────────────────┼────────────────────────┐
+                     ▼                                        ▼                        ▼
+       +----------------------------+            +--------------------------+    +-------------------+
+       | Discord / Slack Incident   |            | Enterprise Alert Relay   |    | Prometheus / OTel |
+       | Channel (Lock Bottlenecks) |            | (Resend Email API)       |    | Grafana Dashboard |
+       +----------------------------+            +--------------------------+    +-------------------+

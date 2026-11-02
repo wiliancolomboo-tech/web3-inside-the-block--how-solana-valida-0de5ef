@@ -1,0 +1,7 @@
+# Solana RPC Node (Must support getBlock with full transaction details)
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+
+# Notification Integrations
+RESEND_API_KEY=re_1234567890abcdef
+ALERT_EMAIL=security-lead@enterprise.com
+WEBHOOK_URL=https://discord.com/api/webhooks/...

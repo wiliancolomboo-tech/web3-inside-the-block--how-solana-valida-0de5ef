@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  solana-orderflow-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: solana-orderflow-agent
+    restart: always
+    environment:
+      - SOLANA_RPC_URL=${SOLANA_RPC_URL:-https://api.mainnet-beta.solana.com}
+      - ENTERPRISE_WEBHOOK_URL=${ENTERPRISE_WEBHOOK_URL}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - ALERT_EMAIL_RECIPIENT=${ALERT_EMAIL_RECIPIENT}
+    ports:
+      - "9100:9100"
+    healthcheck:
+      test: ["CMD", "node", "-e", "process.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"

@@ -1,0 +1,18 @@
+🧵 1/3 How do Solana validators REALLY order your transactions? 
+
+It’s not an EVM-style single-file mempool. Solana uses continuous block generation, parallel execution threads, and dynamic read/write account locks. 
+
+Here is what happens inside the Banking Stage every 400ms: ⚡👇
+
+🧵 2/3 Even if you pay a 10,000,000 micro-lamport fee, your TX can get dropped if you hit an Account Lock Contention bottleneck! 
+
+Solana enforces a strict 12M Compute Unit cap per writable account. 100 bots spamming the same pool lock each other out, while parallel threads execute independent transfers instantly.
+
+Plus: Over 85% of stake runs Jito-Solana, interleaving out-of-band MEV bundles directly into the top of slot windows before standard queues even get processed! 🛠️
+
+🧵 3/3 We built the Open-Source Solana Banking Stage Simulation & Forensic Engine (`solana-banking-scheduler-engine`):
+✅ Emulates TPU QUIC ingress, SWQoS, and thread scheduling
+✅ Detects write-lock contention hotspots in real-time
+✅ Direct Slack/Discord telemetry alerts
+
+Built for high-frequency Solana engineers & validators! 🚀 @Solana @solanalabs #Solana #Rust #MEV

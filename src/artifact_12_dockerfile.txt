@@ -1,0 +1,31 @@
+# Stage 1: Build & Optimize
+FROM rust:1.78-bookworm AS builder
+
+WORKDIR /usr/src/solana-block-orderer
+COPY Cargo.toml Cargo.lock ./
+COPY src/ ./src/
+COPY tests/ ./tests/
+
+# Build statically linked release binary
+RUN cargo test --release
+RUN cargo build --release --bin inspector
+
+# Stage 2: Distroless Minimal Runtime
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY --from=builder /usr/src/solana-block-orderer/target/release/inspector /app/inspector
+
+ENV RUST_LOG="info"
+ENV WORKER_THREADS="8"
+
+# Expose Telemetry Healthcheck
+EXPOSE 8080
+
+ENTRYPOINT ["/app/inspector"]
+CMD ["simulate-slot", "--slot", "300000000", "--tx-count", "2500"]

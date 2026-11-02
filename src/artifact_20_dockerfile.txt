@@ -1,0 +1,29 @@
+# Stage 1: Build the Rust Scheduler Core
+FROM rust:1.77-slim-bullseye AS rust-builder
+WORKDIR /usr/src/solana-scheduler
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+COPY tests ./tests
+RUN cargo test --release
+RUN cargo build --release
+
+# Stage 2: Build the TypeScript Enterprise Orderflow Agent
+FROM node:20-alpine AS node-builder
+WORKDIR /usr/src/sol-agent
+COPY package.json package-lock.json* tsconfig.json ./
+RUN npm ci
+COPY src ./src
+RUN npm run build
+
+# Stage 3: Production Runtime
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=node-builder /usr/src/sol-agent/node_modules ./node_modules
+COPY --from=node-builder /usr/src/sol-agent/dist ./dist
+COPY --from=node-builder /usr/src/sol-agent/package.json ./
+COPY --from=rust-builder /usr/src/solana-scheduler/target/release/solana-scheduler-core /usr/local/bin/
+
+ENV NODE_ENV=production
+EXPOSE 9100
+
+CMD ["node", "dist/index.js"]

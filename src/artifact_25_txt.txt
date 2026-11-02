@@ -1,0 +1,7 @@
+3/ To prove this deterministically, we built and open-sourced the Solana BankingStage Simulation Engine & Sentinel Daemon.
+
+Simulate lock graphs, inspect micro-batch entry hashing, and catch fee inversions in real-time.
+
+Full code + Docker runbook: https://github.com/enterprise-solana/block-ordering-deepdive
+
+Built for builders pushing the SVM to its physical limits. 🚀

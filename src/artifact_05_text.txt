@@ -1,0 +1,17 @@
+inside-the-block/
+├── package.json
+├── tsconfig.json
+├── Dockerfile
+├── docker-compose.yml
+├── .env.example
+├── src/
+│   ├── config.ts
+│   ├── db.ts
+│   ├── evidence.ts
+│   ├── notifier.ts
+│   ├── solana.ts
+│   ├── server.ts
+│   └── cli.ts
+└── test/
+    ├── evidence.test.ts
+    └── api.test.ts

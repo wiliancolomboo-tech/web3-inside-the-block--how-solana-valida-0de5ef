@@ -1,0 +1,68 @@
+import {
+  Connection,
+  ParsedConfirmedTransaction,
+  PublicKey
+} from "@solana/web3.js";
+import { config } from "./config.js";
+import { getSubmission } from "./db.js";
+import { createEvidence } from "./evidence.js";
+
+const connection = new Connection(config.SOLANA_RPC_URL, "finalized");
+
+export async function resolveSignature(signature: string) {
+  const submission = getSubmission(signature);
+
+  if (!submission) {
+    throw new Error("Signature was not registered before resolution");
+  }
+
+  const tx = await connection.getParsedTransaction(signature, {
+    commitment: "finalized",
+    maxSupportedTransactionVersion: 0
+  });
+
+  if (!tx) {
+    return createEvidence({
+      signature,
+      submittedAtMs: submission.submittedAtMs,
+      rpcUrl: submission.rpcUrl,
+      status: "unresolved",
+      previousHash: null
+    });
+  }
+
+  const index = await findTransactionIndex(tx);
+  const finalizedAtMs = Date.now();
+  const accountKeys = tx.transaction.message.accountKeys.map((k) =>
+    k.pubkey.toBase58()
+  );
+
+  return createEvidence({
+    signature,
+    submittedAtMs: submission.submittedAtMs,
+    rpcUrl: submission.rpcUrl,
+    status: tx.meta?.err ? "failed" : "finalized",
+    slot: tx.slot,
+    blockTime: tx.blockTime,
+    transactionIndex: index,
+    success: tx.meta?.err === null,
+    feeLamports: tx.meta?.fee ?? undefined,
+    accountKeys,
+    finalizedAtMs,
+    previousHash: null
+  });
+}
+
+async function findTransactionIndex(
+  tx: ParsedConfirmedTransaction
+): Promise<number | undefined> {
+  const block = await connection.getBlock(tx.slot, {
+    commitment: "finalized",
+    maxSupportedTransactionVersion: 0,
+    transactionDetails: "signatures",
+    rewards: false
+  });
+
+  if (!block) return undefined;
+  return block.signatures.indexOf(tx.transaction.signatures[0]);
+}

@@ -1,0 +1,21 @@
+🧵 1/3
+Ever wondered how Solana validators ACTUALLY order transactions inside a block?
+
+It’s NOT an EVM-style single-threaded gas auction. It's a high-concurrency hardware scheduler governed by BankingStage, Sealevel account locks, and localized fee markets. 
+
+Here is what really happens inside a slot: 👇
+
+🧵 2/3
+1️⃣ Gulf Stream routes QUIC packets straight to the scheduled leader.
+2️⃣ BankingStage buffers txs into heaps sorted by micro-lamports / CU.
+3️⃣ Non-conflicting accounts execute in parallel across CPU threads.
+4️⃣ Hit accounts hit a HARD 12M CU write limit per block. No matter your fee, you can’t monopolize the slot!
+
+🧵 3/3
+To prove this, we built `SolOrderEngine`:
+⚡ Complete Rust BankingStage scheduler simulation
+🔍 Real-time CLI reverse-engineering live Solana blocks & Jito bundles
+🚨 Webhook alerts for localized fee saturation
+
+Check out the full 1st-place submission package: github.com/sponsor-bounties/inside-the-block-solana-ordering 🚀
+@solana @solana_devs #Solana #Rust #MEV #Blockchain

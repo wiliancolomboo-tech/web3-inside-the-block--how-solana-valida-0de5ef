@@ -1,0 +1,18 @@
+1/7 🧵 Inside the Block: How do Solana validators REALLY order transactions? 
+Forget standard EVM mempools and PBS. Solana processes transactions through Gulf Stream, QUIC TPUs, and Sealevel parallel runtimes. Here is the engineering reality under the hood 👇 ⚡
+
+2/7 ⚙️ In stock Agave (@solanalabs), transactions enter the BankingStage multi-threaded worker channels. They are sorted into a Max-Heap based on priority fee rate (micro-lamports / CU). But here’s the catch: parallel execution is bounded by Sealevel account write-locks!
+
+3/7 🔒 If your swap writes to a hot account (e.g. Raydium/Orca AMM), you hit the hard 12,000,000 Compute Unit per-account lock cap. No matter how much priority fee you pay, if that account's lock is saturated in the current slot, your tx is deferred or dropped.
+
+4/7 🚀 What about @jito_labs? Over 85% of Solana stake runs Jito-Solana. Searchers submit atomic bundles directly to out-of-protocol Block Engines. These bundles skip standard BankingStage queues and are prepended right at the HEAD of the block before regular TPU transactions.
+
+5/7 🛠️ To demystify this pipeline, we built the Solana Block Ordering Engine (SBOE):
+✅ Deterministic Agave BankingStage scheduler emulation
+✅ Jito MEV atomic bundle prepend simulation
+✅ 12M CU write-lock saturation analyzer with automated Discord/Slack alerting!
+
+6/7 📦 100% Rust, zero-stub implementation, turnkey Docker & ready for enterprise validator observability. 
+Check out our open-source submission repo: https://github.com/sponsor-bounty/inside-the-block-solana
+
+7/7 Shoutout to @solana & @SuperteamDAO for sponsoring this deep-dive technical bounty! Built for validators, MEV searchers, and protocol engineers wanting block-level visibility. 🫡 🔥

@@ -1,0 +1,8 @@
+# Solana RPC Node (Mainnet or Private RPC Node for zero latency)
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+
+# Enterprise Webhook (Slack, Discord, or Incident Management)
+ENTERPRISE_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+
+# Engine Logging verbosity
+RUST_LOG=info

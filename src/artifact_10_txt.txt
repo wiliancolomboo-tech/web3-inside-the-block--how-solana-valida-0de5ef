@@ -1,0 +1,7 @@
+orderflow-monitor/
+├── package.json
+├── tsconfig.json
+└── src/
+    ├── index.ts
+    ├── analyzer.ts
+    └── notifier.ts

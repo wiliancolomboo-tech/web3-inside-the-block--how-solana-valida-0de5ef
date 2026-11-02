@@ -1,0 +1,48 @@
+flowchart TD
+    subgraph INGRESS["1. Ingress & Verification"]
+        TX[Client / Searcher Transaction] -->|QUIC Staked/Unstaked| TPU[TPU Ingress Port]
+        TX_BUNDLE[Arbitrage Searcher Bundle] -->|gRPC Stream| JITO_ENGINE[Jito Block Engine Relay]
+        TPU --> SIGVER[SigVerify Stage - SIMD/AVX-512]
+        SIGVER -->|Invalid Signatures| DROP[Drop Packet]
+        SIGVER -->|Valid Packets| SWQOS[Stake-Weighted QoS Filter]
+    end
+
+    subgraph SCHEDULER["2. BankingStage & Scheduling"]
+        SWQOS --> QUEUE[Unprocessed Packet Queue]
+        JITO_ENGINE -->|Tip Auction Won| BUNDLE_QUEUE[Jito Bundle Priority Queue]
+        
+        CENTRAL_SCHED{Central Scheduler Engine}
+        QUEUE --> CENTRAL_SCHED
+        BUNDLE_QUEUE -->|Preempts Regular TPU| CENTRAL_SCHED
+        
+        CENTRAL_SCHED -->|Extract Read/Write Lock Keys| LOCK_GRAPH[Lock Dependency Graph]
+        LOCK_GRAPH --> CONFLICT_CHECK{Account Lock Conflict?}
+        
+        CONFLICT_CHECK -->|No Conflict| THREAD_DISPATCH[Priority Dispatcher: Sorted by CU Fee]
+        CONFLICT_CHECK -->|Active Write Lock| DEFER[Defer to Next Batch / Slot Spillover]
+    end
+
+    subgraph SEALEVEL["3. Sealevel Parallel VM"]
+        THREAD_DISPATCH --> THREAD_1[Worker Thread 1: Raydium Pool A]
+        THREAD_DISPATCH --> THREAD_2[Worker Thread 2: Orca Pool B]
+        THREAD_DISPATCH --> THREAD_3[Worker Thread 3: Jito Bundle Tip Execution]
+        THREAD_DISPATCH --> THREAD_N[Worker Thread N: Transfer / Nonce Ops]
+    end
+
+    subgraph POH_ENTRY["4. State Commit & PoH Packing"]
+        THREAD_1 --> BANK_EXEC[Bank Execution & Account State Transition]
+        THREAD_2 --> BANK_EXEC
+        THREAD_3 --> BANK_EXEC
+        THREAD_N --> BANK_EXEC
+        
+        BANK_EXEC --> POH_RECORD[PoH Tick Recording & SHA-256 Chain]
+        POH_RECORD --> SHRED[Shredder Stage: FEC Erasure Coding]
+        SHRED --> TURBINE[Turbine Gossip Broadcast to Clusters]
+    end
+
+    subgraph TELEMETRY["5. Enterprise Observability & Alerts"]
+        BANK_EXEC -.->|Block Execution Events| INSPECTOR[Real-Time Validator Inspector]
+        INSPECTOR -->|Detect Sandwich / Reverts| ALERT_ADAPTER[Enterprise Alert Hub]
+        ALERT_ADAPTER -->|Webhook Payload| DISCORD[Discord / Slack Alert]
+        ALERT_ADAPTER -->|RPC Stream| METRICS[Prometheus / Grafana Endpoint]
+    end

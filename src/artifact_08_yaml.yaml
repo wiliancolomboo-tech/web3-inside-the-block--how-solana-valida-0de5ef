@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 2s
+
+scrape_configs:
+  - job_name: 'solana_banking_stage'
+    static_configs:
+      - targets: ['block-engine-agent:9100']

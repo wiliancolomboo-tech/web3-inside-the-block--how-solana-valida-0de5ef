@@ -1,0 +1,1 @@
+docker exec -it contention-monitor-cli node dist/index.js recommend-fee 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8

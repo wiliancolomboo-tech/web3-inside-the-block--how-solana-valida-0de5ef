@@ -1,0 +1,8 @@
+solana-block-inspector/
+├── package.json
+├── tsconfig.json
+├── .env.example
+└── src/
+    ├── index.ts
+    ├── alerts.ts
+    └── types.ts

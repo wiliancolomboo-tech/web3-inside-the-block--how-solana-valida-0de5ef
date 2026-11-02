@@ -1,0 +1,21 @@
+{
+  "name": "solana-block-inspector",
+  "version": "1.0.0",
+  "description": "Real-time Solana Block Ordering, Account Lock Contention & Fee Inspector",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && node dist/index.js",
+    "inspect": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.91.8",
+    "axios": "^1.6.8",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

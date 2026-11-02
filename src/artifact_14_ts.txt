@@ -1,0 +1,27 @@
+const baseUrl = process.env.INSIDE_BLOCK_URL ?? "http://localhost:8080";
+const [command, signature] = process.argv.slice(2);
+
+if (!command || !signature) {
+  console.error(
+    "Usage: npm run cli -- register <signature> | resolve <signature> | get <signature>"
+  );
+  process.exit(1);
+}
+
+const endpoint =
+  command === "register"
+    ? `/v1/submissions`
+    : command === "resolve"
+      ? `/v1/submissions/${signature}/resolve`
+      : `/v1/evidence/${signature}`;
+
+const response = await fetch(`${baseUrl}${endpoint}`, {
+  method: command === "register" ? "POST" : "POST",
+  headers: { "content-type": "application/json" },
+  body: command === "register"
+    ? JSON.stringify({ signature, submittedAtMs: Date.now() })
+    : undefined
+});
+
+console.log(JSON.stringify(await response.json(), null, 2));
+process.exit(response.ok ? 0 : 1);

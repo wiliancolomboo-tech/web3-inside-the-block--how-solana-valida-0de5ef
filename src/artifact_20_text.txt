@@ -1,0 +1,5 @@
+1/ Ever wonder how Solana validators ACTUALLY order transactions inside a block?
+
+Spoiler: It's NOT First-Come, First-Served (FCFS), and paying the highest Priority Fee doesn't guarantee your transaction lands first.
+
+Here is the deep dive into Sealevel, BankingStage, and Jito 🧵👇

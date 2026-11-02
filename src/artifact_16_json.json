@@ -1,0 +1,10 @@
+{
+  "slot": 291040500,
+  "leader": "0707070707070707070707070707070707070707070707070707070707070707",
+  "timestamp": "2025-02-18T10:45:00.123456Z",
+  "total_compute_units": 47800000,
+  "total_priority_fees_collected": 12845000,
+  "total_jito_tips_collected": 18500000,
+  "committed_transactions_count": 384,
+  "utilization_percent": 99.58
+}

@@ -1,0 +1,23 @@
+# syntax=docker/dockerfile:1.4
+FROM rust:1.75-bullseye AS builder
+
+WORKDIR /usr/src/solana-block-engine
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+
+RUN cargo build --release --bin solana-orderflow-agent
+
+# Production Minimal Runtime
+FROM debian:bullseye-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates libssl1.1 curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY --from=builder /usr/src/solana-block-engine/target/release/solana-orderflow-agent /usr/local/bin/
+
+ENV RUST_LOG=info
+EXPOSE 9100
+
+ENTRYPOINT ["solana-orderflow-agent"]
+CMD ["simulate-block", "--tx-count", "2500"]

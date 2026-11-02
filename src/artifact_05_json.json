@@ -1,0 +1,21 @@
+{
+  "name": "sbe-forensics-agent",
+  "version": "1.0.0",
+  "description": "Solana Block Forensics & Validator Ordering Intelligence Agent",
+  "main": "dist/cli.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.95.3",
+    "axios": "^1.7.2",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "resend": "^3.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.9",
+    "typescript": "^5.5.2"
+  }
+}

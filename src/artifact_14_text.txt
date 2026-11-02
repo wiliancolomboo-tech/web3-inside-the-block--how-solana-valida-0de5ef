@@ -1,0 +1,8 @@
+running 5 tests
+test tests::test_lock_table_mutual_exclusion ... ok
+test tests::test_poh_cryptographic_chaining ... ok
+test tests::test_jito_bundle_precedence_over_regular_priority ... ok
+test tests::test_priority_fee_precedence_in_scheduling ... ok
+test tests::test_account_12m_cu_write_limit_enforcement ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s

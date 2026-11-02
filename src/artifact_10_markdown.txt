@@ -1,0 +1,22 @@
+🧵 1/3
+Ever wondered what actually happens inside a Solana block in the 400ms before it's finalized? 
+
+It’s NOT an EVM-style serial queue. Solana uses Sealevel parallel scheduling, dynamic priority fees, and read/write account lock graphs to execute thousands of transactions simultaneously.
+
+Here is how it works under the hood 👇
+
+🧵 2/3
+1️⃣ Packets enter via QUIC & SigVerifyStage
+2️⃣ BankingStage parses Compute Budget micro-lamports/CU
+3️⃣ Transactions writing to DISJOINT accounts run concurrently across multi-threaded workers
+4️⃣ Jito out-of-band auction bundles get atomic precedence
+5️⃣ PoH Recorder ticks state into an immutable stream
+
+When two txs touch the same AMM pool? Lock contention strikes.
+
+🧵 3/3
+To solve transaction dropping and MEV degradation, we built `sol-scheduler-forensics`: an open-source BankingStage simulation & real-time telemetry engine with enterprise @resend + Discord alerting.
+
+Built for the @solana ecosystem. 
+
+Dive into the block: https://github.com/sponsor-bounty/sol-scheduler-forensics 🚀

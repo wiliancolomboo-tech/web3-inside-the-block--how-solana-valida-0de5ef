@@ -1,0 +1,7 @@
+running 4 tests
+test test_priority_fee_ordering_precedence ... ok
+test test_account_compute_unit_cap_enforcement ... ok
+test test_block_level_compute_unit_cap ... ok
+test test_jito_bundle_atomicity_and_reversion_rollback ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out

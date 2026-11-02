@@ -1,0 +1,47 @@
+flowchart TD
+    subgraph Ingestion["1. Gulf Stream TPU Ingestion"]
+        TxClient["Client / Searcher Tx"] -->|QUIC / TPU port 8003| TPU["Leader TPU FetchStage"]
+        TPU --> SigVerify["SigVerifyStage (GPU / AVX-512)"]
+        SigVerify --> SanitizedBatch["Sanitized Transaction Batches"]
+    end
+
+    subgraph BankingStage["2. Modern Banking Stage & Scheduler"]
+        SanitizedBatch --> LockAnalyzer["Account Lock Conflict Analyzer"]
+        LockAnalyzer --> PrioQueue["Priority Fee Heap (microLamports / CU)"]
+        
+        subgraph JitoAuction["Jito Block Engine (MEV Auction)"]
+            SearcherBundle["Searcher Tip Bundles"] --> BundleEngine["Jito-Solana Auction Relayer"]
+            BundleEngine -->|Preempt / Interleave| PrioQueue
+        end
+
+        PrioQueue --> Worker1["Execution Worker Thread 1\n(Locks: Acct A, Acct B)"]
+        PrioQueue --> Worker2["Execution Worker Thread 2\n(Locks: Acct C, Acct D)"]
+        PrioQueue --> WorkerN["Execution Worker Thread N\n(Non-conflicting RW sets)"]
+    end
+
+    subgraph Execution["3. Sealevel Parallel Runtime & Commit"]
+        Worker1 --> VMExec["Parallel Transaction Execution (BPF / Sealevel)"]
+        Worker2 --> VMExec
+        WorkerN --> VMExec
+        VMExec --> BankForks["Bank Commit / State Delta Update"]
+    end
+
+    subgraph PoHAndTurbine["4. Proof of History & Egress"]
+        BankForks --> PoH["PoH Recorder (SHA-256 VDF Loop)"]
+        PoH --> EntryGen["Entry Generation (Micro-batch serialization)"]
+        EntryGen --> ShredEngine["Shredding (Data & Coding Shreds)"]
+        ShredEngine --> Turbine["Turbine Tree-Based UDP Broadcast"]
+    end
+
+    subgraph Telemetry["5. Enterprise Observability & Monitoring"]
+        BankForks -.-> Exporter["Block Analytics Telemetry Agent"]
+        Exporter --> WebhookNotifier["Enterprise Webhook Relay\n(Slack / Discord / OpsGenie)"]
+        Exporter --> Prometheus["Prometheus Metrics Collector\n(:9102 /metrics)"]
+    end
+
+    classDef primary fill:#1E293B,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
+    classDef secondary fill:#0F172A,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
+    classDef highlight fill:#022C22,stroke:#10B981,stroke-width:2px,color:#F8FAFC;
+    class TPU,SigVerify,SanitizedBatch,LockAnalyzer,PrioQueue,Worker1,Worker2,WorkerN,VMExec,BankForks primary;
+    class SearcherBundle,BundleEngine secondary;
+    class PoH,EntryGen,ShredEngine,Turbine,Exporter,WebhookNotifier,Prometheus highlight;

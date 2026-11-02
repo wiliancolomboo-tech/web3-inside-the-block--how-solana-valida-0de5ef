@@ -1,0 +1,33 @@
+1/7 🧵 Inside the Block: How @Solana Validators ACTUALLY Order Transactions.
+
+Think Solana has a public mempool like Ethereum? Think again. There is no global queue.
+
+Here is the technical reality of TPU, QUIC, SWQoS, write-locks, and the Agave scheduler 👇
+
+2/7 ⚙️ Step 1: TPU Ingress & Stake-Weighted QoS (SWQoS)
+Your transaction doesn't broadcast to the whole network. It streams over QUIC directly to the current & upcoming slot leaders.
+Staked nodes get dedicated pipe allocations. Unstaked RPCs fight for the remaining ~20% buffer. Under load? Drops occur at the socket layer.
+
+3/7 🔒 Step 2: The Parallel Execution Illusion & Write-Locks
+Sealevel executes txs in parallel across threads—UNLESS they write to the same account.
+Two txs updating the same AMM pool CANNOT run concurrently.
+Max Block Limit: 48M Compute Units.
+Max Single Account Limit: 12M CUs (preventing single-pool monopolies).
+
+4/7 💰 Step 3: Priority Fee Sorting (Micro-Lamports per CU)
+Solana sorts non-conflicting batches greedily:
+Priority Score = Prioritization Fee / Compute Budget Requested.
+Overpaying priority fees on an account that has already hit its 12M CU limit will still get your tx dropped!
+
+5/7 ⚡ Step 4: Out-of-Band Jito-Solana Auctions
+Over 75% of validators run Jito.
+Searchers send atomic bundles off-chain with direct SOL tips. Jito's block engine simulates bundles and injects them straight into BankingStage, bypassing standard TPU queues.
+
+6/7 🛠️ We built the Solana Block Engineering Suite (SBES):
+- Deterministic BankingStage scheduler simulator in Rust.
+- CLI & live contention observer tracking account saturation.
+- Enterprise alerts (Slack/Discord/Resend) when write-locks hit 90%.
+
+7/7 Open-source, turnkey Docker deployment, and enterprise-ready.
+Read the full deep-dive and test the simulator codebase here: https://github.com/solana-bounty/sbes-block-ordering
+#Solana #Rust #DeFi #SolanaDevs

@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  sentinel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: blockscope-sentinel
+    restart: always
+    environment:
+      - PORT=9090
+      - SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+      - NOTIFICATION_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+      - LOG_LEVEL=info
+    ports:
+      - "9090:9090"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - blockscope-net
+
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: blockscope-prometheus
+    restart: always
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - blockscope-net
+
+networks:
+  blockscope-net:
+    driver: bridge

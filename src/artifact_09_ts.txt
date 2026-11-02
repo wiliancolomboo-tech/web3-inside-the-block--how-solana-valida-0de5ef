@@ -1,0 +1,65 @@
+import Database from "better-sqlite3";
+import { mkdirSync } from "node:fs";
+import { dirname } from "node:path";
+import { config } from "./config.js";
+
+mkdirSync(dirname(config.DB_PATH), { recursive: true });
+
+export const db = new Database(config.DB_PATH);
+
+db.pragma("journal_mode = WAL");
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS submissions (
+    signature TEXT PRIMARY KEY,
+    submitted_at_ms INTEGER NOT NULL,
+    rpc_url TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS evidence (
+    signature TEXT PRIMARY KEY,
+    json TEXT NOT NULL,
+    evidence_hash TEXT NOT NULL,
+    created_at_ms INTEGER NOT NULL
+  );
+`);
+
+export function saveSubmission(
+  signature: string,
+  submittedAtMs: number,
+  rpcUrl: string
+): void {
+  db.prepare(`
+    INSERT INTO submissions(signature, submitted_at_ms, rpc_url)
+    VALUES (?, ?, ?)
+    ON CONFLICT(signature) DO UPDATE SET
+      submitted_at_ms = excluded.submitted_at_ms,
+      rpc_url = excluded.rpc_url
+  `).run(signature, submittedAtMs, rpcUrl);
+}
+
+export function getSubmission(signature: string) {
+  return db.prepare(
+    `SELECT signature, submitted_at_ms AS submittedAtMs, rpc_url AS rpcUrl
+     FROM submissions WHERE signature = ?`
+  ).get(signature) as {
+    signature: string;
+    submittedAtMs: number;
+    rpcUrl: string;
+  } | undefined;
+}
+
+export function saveEvidence(record: object & { signature: string; evidenceHash: string }) {
+  const json = JSON.stringify(record);
+  db.prepare(`
+    INSERT OR REPLACE INTO evidence(signature, json, evidence_hash, created_at_ms)
+    VALUES (?, ?, ?, ?)
+  `).run(record.signature, json, record.evidenceHash, Date.now());
+}
+
+export function getEvidence(signature: string): unknown | undefined {
+  const row = db.prepare(`SELECT json FROM evidence WHERE signature = ?`)
+    .get(signature) as { json: string } | undefined;
+
+  return row ? JSON.parse(row.json) : undefined;
+}

@@ -1,0 +1,9 @@
+{
+  "status": "healthy",
+  "engine": "Agave-v1.18-Scheduler-Model",
+  "limits": {
+    "block_cu": 48000000,
+    "account_cu": 12000000
+  },
+  "uptime_seconds": 84210
+}

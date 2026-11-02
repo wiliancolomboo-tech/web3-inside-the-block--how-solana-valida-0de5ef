@@ -1,0 +1,25 @@
+Solana Block Formation Pipeline (Micro-second Resolution)
+ ───────────────────────────────────────────────────────────────────────────────
+ [ Gulf Stream QUIC Packets ] ──> [ SigVerifyStage ] 
+                                          │
+                                          ▼
+                                [ TPU BankingStage ]
+                                 ┌───────────────┐
+                     ┌───────────┤ Channel Recv  ├───────────┐
+                     │           └───────┬───────┘           │
+                     ▼                   ▼                   ▼
+            [ Jito Block Engine ] [ Worker Thread 1 ] [ Worker Thread N ]
+            (Atomic Tip Bundles)  (Account Lock Res)  (Account Lock Res)
+                     │                   │                   │
+                     └───────────┬───────┴───────────────────┘
+                                 ▼
+                     [ PrioQueue: microLamports/CU ]
+                                 │
+                                 ▼
+                     [ Sealevel Parallel VM Exec ]
+                                 │
+                                 ▼
+                      [ PoH Recorder / Hashes ]
+                                 │
+                                 ▼
+                      [ Turbine Shred Broadcaster ]

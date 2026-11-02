@@ -1,16 +1,22 @@
-# File: docker-compose.yml
 version: '3.8'
 
 services:
-  solana-block-engine-monitor:
-    build: .
+  sbe-forensics-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sbe_forensics_worker
     restart: unless-stopped
     environment:
-      - RPC_URL=https://api.mainnet-beta.solana.com
-      - SLACK_WEBHOOK=${SLACK_WEBHOOK:-}
-    command: ["analyze", "--rpc", "https://api.mainnet-beta.solana.com"]
+      - SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - ALERT_EMAIL=${ALERT_EMAIL}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - PORT=8080
+    ports:
+      - "8080:8080"
     logging:
       driver: "json-file"
       options:
-        max-size: "20m"
+        max-size: "50m"
         max-file: "5"

@@ -1,0 +1,30 @@
+# Multi-stage enterprise build for the Rust Scheduler & Node.js Inspector
+FROM rust:1.78-bullseye AS rust-builder
+WORKDIR /usr/src/solana-block-engine
+COPY solana-block-engine/ .
+RUN cargo build --release
+
+FROM node:20-slim AS node-builder
+WORKDIR /usr/src/solana-block-inspector
+COPY solana-block-inspector/package*.json ./
+RUN npm ci
+COPY solana-block-inspector/ .
+RUN npm run build
+
+# Final lightweight runner image
+FROM debian:bullseye-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY --from=rust-builder /usr/src/solana-block-engine/target/release/solana-block-engine /usr/local/bin/solana-block-engine
+COPY --from=node-builder /usr/src/solana-block-inspector /app/inspector
+
+WORKDIR /app/inspector
+EXPOSE 9100 8080
+
+CMD ["sh", "-c", "/usr/local/bin/solana-block-engine & node dist/index.js"]

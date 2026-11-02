@@ -1,0 +1,5 @@
+2/ Unlike Ethereum's single mempool, Solana uses multi-threaded TPU ingestion (QUIC).
+
+Transactions requesting write-locks on the same accounts CANNOT run in parallel.
+
+If an AMM pool is saturated, high-fee txs get stalled or dropped while non-conflicting low-fee txs fly through.

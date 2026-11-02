@@ -1,0 +1,20 @@
+type EvidenceRecord = {
+  schemaVersion: 1;
+  signature: string;
+  submittedAtMs: number;
+  rpcUrl: string;
+  status: "finalized" | "failed" | "expired" | "unresolved";
+  slot?: number;
+  blockTime?: number | null;
+  transactionIndex?: number;
+  success?: boolean;
+  feeLamports?: number;
+  computeUnitLimit?: number;
+  computeUnitPriceMicroLamports?: number;
+  firstSeenAtMs?: number;
+  finalizedAtMs?: number;
+  latencyMs?: number;
+  accountKeys?: string[];
+  previousHash: string | null;
+  evidenceHash: string;
+};

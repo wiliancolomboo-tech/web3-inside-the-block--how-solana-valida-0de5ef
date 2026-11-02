@@ -1,0 +1,17 @@
+1/ Ever wonder how @solana validators pack 50,000+ txs/sec into a deterministic block without a public mempool?
+
+It’s NOT simple FIFO. It’s a hyper-optimized multi-threaded BankingStage pipeline driven by account lock graphs & CU auctions.
+
+Here is what's happening under the hood 🧵👇
+
+2/ When your tx hits leader TPU via QUIC:
+⚡ SigVerify validates Ed25519 in batch
+🔒 Scheduler builds dynamic read/write lock graphs
+📈 Prioritizes by Compute Unit price (µLamports/CU)
+🛑 Caps single-account writes at 12M CU to prevent DDoS
+🚀 Jito bundles jump the queue via tip auctions
+
+3/ We built SBESI: an open-source BankingStage scheduling simulator + real-time telemetry agent to visualize write-lock choke points and guarantee transaction landing.
+
+Inspect the block mechanics, verify the benchmarks, and optimize your SVM protocols:
+👉 [https://github.com/sponsor/solana-block-engine]

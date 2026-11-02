@@ -1,0 +1,9 @@
+# HELP solana_latest_slot_inspected Latest slot analyzed by BlockScope
+# TYPE solana_latest_slot_inspected gauge
+solana_latest_slot_inspected 254891024
+# HELP solana_priority_inversions_total Number of priority fee inversions detected
+# TYPE solana_priority_inversions_total counter
+solana_priority_inversions_total{leader_identity="slot_leader"} 14
+# HELP solana_jito_bundles_total Number of Jito MEV bundles observed at head of slot
+# TYPE solana_jito_bundles_total counter
+solana_jito_bundles_total{leader_identity="slot_leader"} 3

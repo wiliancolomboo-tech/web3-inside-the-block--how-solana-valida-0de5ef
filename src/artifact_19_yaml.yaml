@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  solana-orderflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: solana-orderflow-engine
+    restart: always
+    environment:
+      - SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+      - ENTERPRISE_WEBHOOK_URL=https://discord.com/api/webhooks/dummy/mock
+      - POLL_INTERVAL_MS=1000
+    ports:
+      - "9090:9090"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"

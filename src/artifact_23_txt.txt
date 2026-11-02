@@ -1,0 +1,5 @@
+1/ Solana DOES NOT have a mempool. 
+
+So how does a leader validator decide which transactions get included inside a 400ms block slot—and why do your high-priority transactions still fail during volatility?
+
+Here is what actually happens inside the BankingStage 🧵👇

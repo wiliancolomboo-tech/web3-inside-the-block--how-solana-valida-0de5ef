@@ -1,0 +1,18 @@
+FROM rust:1.75-bullseye AS builder
+WORKDIR /usr/src/solana-block-ordering-engine
+
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+COPY tests ./tests
+
+RUN cargo build --release
+
+FROM debian:bullseye-slim
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=builder /usr/src/solana-block-ordering-engine/target/release/solana-block-ordering-engine /usr/local/bin/sv-bee
+
+ENV RUST_LOG=info
+EXPOSE 9090
+
+ENTRYPOINT ["/usr/local/bin/sv-bee"]

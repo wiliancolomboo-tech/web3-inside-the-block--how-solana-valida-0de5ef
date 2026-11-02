@@ -1,0 +1,19 @@
+{
+  "name": "solana-tx-order-analyzer",
+  "version": "1.0.0",
+  "description": "Enterprise Transaction Ordering & Lock Contention Telemetry Client",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.91.0",
+    "axios": "^1.6.8",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.4.3"
+  }
+}

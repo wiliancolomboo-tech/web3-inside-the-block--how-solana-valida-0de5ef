@@ -1,0 +1,9 @@
+# HELP solana_slot_transactions Total transactions processed
+# TYPE solana_slot_transactions counter
+solana_slot_transactions 4
+# HELP solana_slot_cu_consumed Total Compute Units consumed
+# TYPE solana_slot_cu_consumed gauge
+solana_slot_cu_consumed 1050000
+# HELP solana_slot_utilization_ratio Slot CU utilization ratio
+# TYPE solana_slot_utilization_ratio gauge
+solana_slot_utilization_ratio 0.0219

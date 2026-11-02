@@ -1,0 +1,18 @@
+🧵 1/3: Most developers believe Solana transactions are processed in a simple FIFO queue or a global mempool. 
+
+They couldn't be more wrong. 
+
+Here is what ACTUALLY happens inside the block during the 400ms BankingStage sprint ⚡️👇
+
+🧵 2/3: Solana doesn't have a global gas auction—it has a deterministic Sealevel conflict graph:
+- 48M compute unit cap per slot.
+- 12M CU write-lock limit per account.
+- Disjoint accounts execute simultaneously across isolated worker cores. 
+
+Touch the same Raydium pool? You get serialized. Split state across shards? 100k+ parallel TPS. 
+
+🧵 3/3: We built the complete open-source BankingStage scheduling simulator + real-time Geyser lock contention alert pipeline. 
+
+Know when write-locks saturate before your transactions fail. 
+
+Check out our full bounty submission here: github.com/solana-bounty/inside-the-block 🚀 @Solana @solanalabs

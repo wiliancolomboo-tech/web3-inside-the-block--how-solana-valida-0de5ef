@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "crates/solana-scheduler-core",
+    "crates/solana-scheduler-daemon"
+]
+resolver = "2"

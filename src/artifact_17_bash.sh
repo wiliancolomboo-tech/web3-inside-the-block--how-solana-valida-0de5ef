@@ -1,0 +1,1 @@
+curl http://localhost:9090/metrics | grep solana_account_lock_contention_ratio

@@ -1,0 +1,13 @@
+PORT=8080
+SOLANA_RPC_URL=https://api.devnet.solana.com
+DB_PATH=/app/data/inside-the-block.db
+
+# Optional Slack/Discord-compatible webhook
+ALERT_WEBHOOK_URL=
+
+# Optional Resend
+RESEND_API_KEY=
+ALERT_EMAIL_FROM=alerts@example.com
+ALERT_EMAIL_TO=ops@example.com
+
+ALERT_LATENCY_MS=5000

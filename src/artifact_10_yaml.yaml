@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  sv-bee-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: solana-block-scheduler-sentinel
+    restart: always
+    environment:
+      - RUST_LOG=info
+      - ENTERPRISE_WEBHOOK_URL=${ENTERPRISE_WEBHOOK_URL:-}
+    ports:
+      - "9090:9090"
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /usr/local/bin/sv-bee || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

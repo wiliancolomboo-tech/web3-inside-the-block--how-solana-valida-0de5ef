@@ -1,0 +1,4 @@
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+NOTIFICATION_WEBHOOK_URL=https://discord.com/api/webhooks/your/webhook/url
+RESEND_API_KEY=re_1234567890abcdef
+ALERT_EMAIL_RECIPIENT=dev-ops@yourdomain.com

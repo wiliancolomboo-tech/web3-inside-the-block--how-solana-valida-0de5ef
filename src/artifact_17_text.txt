@@ -1,0 +1,6 @@
+3/7 Ever had a high-priority fee tx drop during a meme coin frenzy?
+
+You didn't get front-run. You hit the hard 12,000,000 CU per-account write limit (25% of the 48M block).
+
+We open-sourced a full Block Engine Inspector + Rust PrioGraph Simulator to audit your slots:
+👉 https://github.com/enterprise/solana-block-engine-inspect @solana

@@ -1,0 +1,59 @@
+import { createHash } from "node:crypto";
+
+export type EvidenceInput = {
+  signature: string;
+  submittedAtMs: number;
+  rpcUrl: string;
+  status: "finalized" | "failed" | "expired" | "unresolved";
+  slot?: number;
+  blockTime?: number | null;
+  transactionIndex?: number;
+  success?: boolean;
+  feeLamports?: number;
+  computeUnitLimit?: number;
+  computeUnitPriceMicroLamports?: number;
+  accountKeys?: string[];
+  finalizedAtMs?: number;
+  previousHash: string | null;
+};
+
+function canonical(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
+
+  const object = value as Record<string, unknown>;
+  return `{${Object.keys(object).sort()
+    .map((key) => `${JSON.stringify(key)}:${canonical(object[key])}`)
+    .join(",")}}`;
+}
+
+export function createEvidence(input: EvidenceInput) {
+  if (!input.signature || input.signature.length < 32) {
+    throw new Error("Invalid Solana transaction signature");
+  }
+
+  if (!Number.isSafeInteger(input.submittedAtMs) || input.submittedAtMs <= 0) {
+    throw new Error("submittedAtMs must be a positive safe integer");
+  }
+
+  const latencyMs =
+    input.finalizedAtMs === undefined
+      ? undefined
+      : input.finalizedAtMs - input.submittedAtMs;
+
+  if (latencyMs !== undefined && latencyMs < 0) {
+    throw new Error("finalizedAtMs cannot precede submittedAtMs");
+  }
+
+  const unsigned = {
+    schemaVersion: 1,
+    ...input,
+    latencyMs
+  };
+
+  const evidenceHash = createHash("sha256")
+    .update(canonical(unsigned))
+    .digest("hex");
+
+  return { ...unsigned, evidenceHash };
+}

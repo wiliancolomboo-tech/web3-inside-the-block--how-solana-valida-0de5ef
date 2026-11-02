@@ -1,0 +1,19 @@
+{
+  "name": "solana-block-ordering-inspector",
+  "version": "1.0.0",
+  "description": "Enterprise Solana Block Ordering Inspector & Alerting Mesh",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && node dist/index.js"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.95.3",
+    "axios": "^1.7.7",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "typescript": "^5.6.2"
+  }
+}

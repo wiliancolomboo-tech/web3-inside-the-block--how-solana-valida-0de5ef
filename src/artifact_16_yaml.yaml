@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  solana-block-telemetry:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: solana-block-telemetry
+    restart: unless-stopped
+    environment:
+      - SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+      - DISCORD_SLACK_WEBHOOK_URL=${DISCORD_SLACK_WEBHOOK_URL}
+      - METRICS_PORT=9102
+    ports:
+      - "9102:9102"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9102/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"

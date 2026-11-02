@@ -1,157 +1,220 @@
-// File: src/cli/inspector.ts
-import { Connection, PublicKey, BlockResponse, ConfirmedTransactionMeta } from '@solana/web3.js';
-import axios from 'axios';
-import { Command } from 'commander';
+import { Connection, PublicKey } from "@solana/web3.js";
+import axios from "axios";
 
-interface BlockInspectionMetrics {
+export interface AccountContentionMetric {
+  account: string;
+  totalCuConsumed: number;
+  utilizationPercent: number;
+  contentionEvents: number;
+}
+
+export interface BlockAnalysisReport {
   slot: number;
-  blockTime: number | null | undefined;
+  blockhash: string;
   transactionCount: number;
   totalComputeUnits: number;
-  totalPriorityFeesLamports: number;
-  hotAccounts: Array<{ account: string; writeCount: number; estimatedCu: number }>;
-  lockContentionIndex: number; // 0.0 - 1.0 (Higher means more concurrent write conflicts)
+  blockCapacityPercent: number;
+  hotAccounts: AccountContentionMetric[];
+  priorityFeeP50: number;
+  priorityFeeP90: number;
+  bundleCount: number;
 }
 
-export class BlockOrderingInspector {
+export class SolanaBlockOrderInspector {
   private connection: Connection;
-  private webhookUrl: string | undefined;
+  private discordWebhookUrl?: string;
+  private readonly MAX_ACCOUNT_CU = 12_000_000;
+  private readonly MAX_BLOCK_CU = 48_000_000;
 
-  constructor(rpcUrl: string, webhookUrl?: string) {
-    this.connection = new Connection(rpcUrl, { commitment: 'confirmed' });
-    this.webhookUrl = webhookUrl;
+  constructor(rpcEndpoint: string, discordWebhookUrl?: string) {
+    this.connection = new Connection(rpcEndpoint, "confirmed");
+    this.discordWebhookUrl = discordWebhookUrl;
   }
 
-  public async inspectSlot(slot: number): Promise<BlockInspectionMetrics> {
-    const block: BlockResponse | null = await this.connection.getBlock(slot, {
-      maxSupportedTransactionVersion: 0,
-      transactionDetails: 'full',
-      rewards: false,
-    });
+  public async analyzeSlot(slot: number): Promise<BlockAnalysisReport | null> {
+    try {
+      const block = await this.connection.getBlock(slot, {
+        maxSupportedTransactionVersion: 0,
+        transactionDetails: "full",
+      });
 
-    if (!block || !block.transactions) {
-      throw new Error(`Block at slot ${slot} could not be retrieved.`);
-    }
+      if (!block || !block.transactions) {
+        console.warn(`[WARN] Slot ${slot} yielded no block data or was skipped.`);
+        return null;
+      }
 
-    const accountWriteFrequency: Map<string, number> = new Map();
-    let totalBlockCu = 0;
-    let totalPriorityFees = 0;
+      let totalBlockCu = 0;
+      const accountCuMap: Map<string, { cu: number; hits: number }> = new Map();
+      const priorityPrices: number[] = [];
+      let detectedBundles = 0;
 
-    for (const tx of block.transactions) {
-      const meta: ConfirmedTransactionMeta | null = tx.meta;
-      if (!meta) continue;
+      for (const tx of block.transactions) {
+        // Extract compute units from metadata or default estimates
+        const cuConsumed = tx.meta?.computeUnitsConsumed ?? 200_000;
+        totalBlockCu += cuConsumed;
 
-      const cuConsumed = meta.computeUnitsConsumed || 200_000;
-      totalBlockCu += cuConsumed;
-      totalPriorityFees += (meta.fee > 5000 ? meta.fee - 5000 : 0);
+        const message = tx.transaction.message;
+        const accountKeys = message.getAccountKeys();
 
-      const accountKeys = tx.transaction.message.getAccountKeys();
-      
-      // Determine writable accounts from message header
-      const header = tx.transaction.message.header;
-      const numRequiredSignatures = header.numRequiredSignatures;
-      const numReadonlySigned = header.numReadonlySignedAccounts;
-      const numReadonlyUnsigned = header.numReadonlyUnsignedAccounts;
-      const totalAccounts = accountKeys.length;
+        // Extract priority fees from logs / instruction analysis
+        let priorityPrice = 0;
+        for (const ix of message.compiledInstructions) {
+          const programId = accountKeys.get(ix.programIdIndex);
+          if (
+            programId &&
+            programId.toBase58() === "ComputeBudget111111111111111111111111111111"
+          ) {
+            // Byte 0 = type (3 = SetComputeUnitPrice)
+            if (ix.data.length >= 9 && ix.data[0] === 3) {
+              const view = new DataView(
+                ix.data.buffer,
+                ix.data.byteOffset,
+                ix.data.byteLength
+              );
+              priorityPrice = Number(view.getBigUint64(1, true));
+            }
+          }
+        }
+        priorityPrices.push(priorityPrice);
 
-      const numWritableSigned = numRequiredSignatures - numReadonlySigned;
-      const numWritableUnsigned = totalAccounts - numRequiredSignatures - numReadonlyUnsigned;
+        // Account contention profiling
+        for (let idx = 0; idx < accountKeys.length; idx++) {
+          const isWritable = message.isAccountWritable(idx);
+          if (isWritable) {
+            const pubkeyStr = accountKeys.get(idx)!.toBase58();
+            const curr = accountCuMap.get(pubkeyStr) || { cu: 0, hits: 0 };
+            curr.cu += cuConsumed;
+            curr.hits += 1;
+            accountCuMap.set(pubkeyStr, curr);
+          }
+        }
 
-      // Extract writable public keys
-      for (let i = 0; i < totalAccounts; i++) {
-        const isWritable = (i < numWritableSigned) || (i >= numRequiredSignatures && i < numRequiredSignatures + numWritableUnsigned);
-        if (isWritable) {
-          const pubkeyStr = accountKeys.get(i)!.toBase58();
-          accountWriteFrequency.set(pubkeyStr, (accountWriteFrequency.get(pubkeyStr) || 0) + 1);
+        // Detect tip accounts (e.g. Jito tip payment recipients)
+        const JITO_TIP_ACCOUNTS = new Set([
+          "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5",
+          "HFqU5x63VTqvQss8hp11i4wVV8bD44PvwucfZ2bU7gRe",
+          "Cw8CFyM9FkoMi7K7Crf6HNQqf4uEMzpKw6QNghXLvLkY",
+          "ADaUMid9yfUytqMBgopwjb2DTLSokTSzL1zt6iGPaS49",
+          "DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh",
+          "ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt",
+          "DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL",
+          "3AVi9Tg9Uo68tJfuvoKvqKNWKkC5wPdSSdeBnizKZ6jT",
+        ]);
+
+        for (let idx = 0; idx < accountKeys.length; idx++) {
+          if (JITO_TIP_ACCOUNTS.has(accountKeys.get(idx)!.toBase58())) {
+            detectedBundles++;
+            break;
+          }
         }
       }
+
+      priorityPrices.sort((a, b) => a - b);
+      const p50 = priorityPrices[Math.floor(priorityPrices.length * 0.5)] || 0;
+      const p90 = priorityPrices[Math.floor(priorityPrices.length * 0.9)] || 0;
+
+      const hotAccounts: AccountContentionMetric[] = [];
+      for (const [account, data] of accountCuMap.entries()) {
+        if (data.cu > this.MAX_ACCOUNT_CU * 0.3) {
+          // Flag if exceeding 30% of account limit
+          hotAccounts.push({
+            account,
+            totalCuConsumed: data.cu,
+            utilizationPercent: (data.cu / this.MAX_ACCOUNT_CU) * 100,
+            contentionEvents: data.hits,
+          });
+        }
+      }
+
+      hotAccounts.sort((a, b) => b.totalCuConsumed - a.totalCuConsumed);
+
+      const report: BlockAnalysisReport = {
+        slot,
+        blockhash: block.blockhash,
+        transactionCount: block.transactions.length,
+        totalComputeUnits: totalBlockCu,
+        blockCapacityPercent: (totalBlockCu / this.MAX_BLOCK_CU) * 100,
+        hotAccounts,
+        priorityFeeP50: p50,
+        priorityFeeP90: p90,
+        bundleCount: detectedBundles,
+      };
+
+      if (report.hotAccounts.length > 0 || report.blockCapacityPercent > 85) {
+        await this.dispatchEnterpriseAlert(report);
+      }
+
+      return report;
+    } catch (error) {
+      console.error(`[ERROR] Failed to analyze slot ${slot}:`, error);
+      return null;
     }
-
-    // Sort hot accounts by write conflicts
-    const hotAccounts = Array.from(accountWriteFrequency.entries())
-      .map(([account, writeCount]) => ({
-        account,
-        writeCount,
-        estimatedCu: writeCount * 200_000,
-      }))
-      .sort((a, b) => b.writeCount - a.writeCount)
-      .slice(0, 5);
-
-    // Compute Lock Contention Index (Ratio of writes concentrated on top 3 accounts)
-    const topWrites = hotAccounts.slice(0, 3).reduce((acc, curr) => acc + curr.writeCount, 0);
-    const totalWrites = Array.from(accountWriteFrequency.values()).reduce((a, b) => a + b, 0);
-    const lockContentionIndex = totalWrites > 0 ? parseFloat((topWrites / totalWrites).toFixed(4)) : 0;
-
-    const metrics: BlockInspectionMetrics = {
-      slot,
-      blockTime: block.blockTime,
-      transactionCount: block.transactions.length,
-      totalComputeUnits: totalBlockCu,
-      totalPriorityFeesLamports: totalPriorityFees,
-      hotAccounts,
-      lockContentionIndex,
-    };
-
-    if (this.webhookUrl) {
-      await this.dispatchEnterpriseAlert(metrics);
-    }
-
-    return metrics;
   }
 
-  private async dispatchEnterpriseAlert(metrics: BlockInspectionMetrics): Promise<void> {
+  private async dispatchEnterpriseAlert(report: BlockAnalysisReport): Promise<void> {
+    if (!this.discordWebhookUrl) return;
+
+    const topContested = report.hotAccounts[0];
     const payload = {
-      text: `🚨 *Solana Validator Block Inspection Report: Slot ${metrics.slot}*`,
-      blocks: [
+      username: "Solana BankingStage Telemetry Guard",
+      avatar_url: "https://solana.com/src/img/branding/solanaLogoMark.png",
+      embeds: [
         {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `*Slot:* ${metrics.slot}\n*Transactions Processed:* ${metrics.transactionCount}\n*Block Compute Load:* ${((metrics.totalComputeUnits / 48_000_000) * 100).toFixed(2)}% (48M CU limit)\n*Lock Contention Index:* ${metrics.lockContentionIndex} (High contention if > 0.35)\n*Total Priority Fees:* ${(metrics.totalPriorityFeesLamports / 1e9).toFixed(4)} SOL`
-          }
+          title: `⚠️ Slot ${report.slot} Contention & Saturation Alert`,
+          color: 0xff4500,
+          fields: [
+            {
+              name: "Block Capacity",
+              value: `${report.totalComputeUnits.toLocaleString()} CU (${report.blockCapacityPercent.toFixed(1)}%)`,
+              inline: true,
+            },
+            {
+              name: "P90 Priority Fee",
+              value: `${report.priorityFeeP90.toLocaleString()} μLamports/CU`,
+              inline: true,
+            },
+            {
+              name: "Detected MEV Bundles",
+              value: `${report.bundleCount}`,
+              inline: true,
+            },
+            {
+              name: "Top Hot Account (Write Contention)",
+              value: topContested
+                ? `\`${topContested.account}\`\nConsumed: ${topContested.totalCuConsumed.toLocaleString()} CU (${topContested.utilizationPercent.toFixed(1)}% Cap)`
+                : "None",
+              inline: false,
+            },
+          ],
+          footer: {
+            text: "Deterministic Validator Scheduler Operations",
+          },
+          timestamp: new Date().toISOString(),
         },
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `*Top Contended Write Locks:*\n${metrics.hotAccounts.map((a, i) => `${i + 1}. \`${a.account}\` (${a.writeCount} writes)`).join("\n")}`
-          }
-        }
-      ]
+      ],
     };
 
     try {
-      await axios.post(this.webhookUrl!, payload, { timeout: 5000 });
-    } catch (err: any) {
-      console.error(`[Alert Dispatch Failure]: ${err.message}`);
+      await axios.post(this.discordWebhookUrl, payload, { timeout: 3000 });
+      console.log(`[INFO] Telemetry alert successfully dispatched for slot ${report.slot}`);
+    } catch (postError) {
+      console.error("[ERROR] Failed to post alert to webhook:", postError);
     }
   }
 }
 
-// CLI Execution Entrypoint
-const program = new Command();
-program
-  .name('solana-block-inspector')
-  .description('Deep Transaction Ordering & Account Lock Contention Inspector')
-  .version('1.0.0');
+// Interactive CLI Runner
+if (require.main === module) {
+  const rpc = process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com";
+  const webhook = process.env.DISCORD_WEBHOOK_URL;
+  const inspector = new SolanaBlockOrderInspector(rpc, webhook);
 
-program
-  .command('analyze')
-  .description('Inspect a specific slot or the latest finalized block')
-  .option('-r, --rpc <url>', 'Solana RPC Endpoint', 'https://api.mainnet-beta.solana.com')
-  .option('-s, --slot <number>', 'Slot number to analyze')
-  .option('-w, --webhook <url>', 'Slack/Discord Enterprise Webhook URL')
-  .action(async (options) => {
-    const inspector = new BlockOrderingInspector(options.rpc, options.webhook);
-    try {
-      const slot = options.slot ? parseInt(options.slot, 10) : await (await new Connection(options.rpc)).getSlot();
-      console.log(`[INFO] Analyzing Block Slot: ${slot}...`);
-      const results = await inspector.inspectSlot(slot);
-      console.log(JSON.stringify(results, null, 2));
-    } catch (e: any) {
-      console.error(`[ERROR]: ${e.message}`);
-      process.exit(1);
-    }
-  });
-
-program.parse(process.argv);
+  console.log(`[*] Solana BankingStage Block Inspector Initialized on ${rpc}`);
+  (async () => {
+    const conn = new Connection(rpc, "confirmed");
+    const currentSlot = await conn.getSlot("confirmed");
+    console.log(`[*] Inspecting block at slot: ${currentSlot}`);
+    const report = await inspector.analyzeSlot(currentSlot);
+    console.log("[+] Inspection Output:", JSON.stringify(report, null, 2));
+  })();
+}

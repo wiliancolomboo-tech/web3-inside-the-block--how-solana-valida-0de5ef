@@ -1,0 +1,56 @@
+import { config } from "./config.js";
+
+export async function notify(record: {
+  signature: string;
+  status: string;
+  slot?: number;
+  transactionIndex?: number;
+  latencyMs?: number;
+  evidenceHash: string;
+}) {
+  const message =
+    `Inside the Block\n` +
+    `signature=${record.signature}\n` +
+    `status=${record.status}\n` +
+    `slot=${record.slot ?? "unknown"}\n` +
+    `transactionIndex=${record.transactionIndex ?? "unknown"}\n` +
+    `latencyMs=${record.latencyMs ?? "unknown"}\n` +
+    `evidenceHash=${record.evidenceHash}`;
+
+  const jobs: Promise<Response>[] = [];
+
+  if (config.ALERT_WEBHOOK_URL) {
+    jobs.push(fetch(config.ALERT_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ content: message, text: message })
+    }));
+  }
+
+  if (
+    config.RESEND_API_KEY &&
+    config.ALERT_EMAIL_FROM &&
+    config.ALERT_EMAIL_TO
+  ) {
+    jobs.push(fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${config.RESEND_API_KEY}`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        from: config.ALERT_EMAIL_FROM,
+        to: [config.ALERT_EMAIL_TO],
+        subject: `Solana transaction ${record.status}`,
+        text: message
+      })
+    }));
+  }
+
+  const responses = await Promise.allSettled(jobs);
+  for (const result of responses) {
+    if (result.status === "fulfilled" && !result.value.ok) {
+      console.error("Notification failed", await result.value.text());
+    }
+  }
+}

@@ -1,0 +1,7 @@
+running 4 tests
+test test_lock_table_read_write_concurrency ... ok
+test test_writable_account_cu_saturation_limit ... ok
+test test_priority_fee_ordering_determinism ... ok
+test test_jito_bundle_atomic_prioritization ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s

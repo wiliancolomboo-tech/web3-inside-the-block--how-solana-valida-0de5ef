@@ -1,0 +1,6 @@
+{
+  "status": "healthy",
+  "version": "1.0.0",
+  "active_worker_threads": 8,
+  "slot_processing_rate_hz": 2.5
+}

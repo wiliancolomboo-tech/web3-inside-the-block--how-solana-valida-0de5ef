@@ -1,0 +1,9 @@
+# Solana RPC Cluster (Must support getBlock with maxSupportedTransactionVersion: 0)
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+POLL_INTERVAL_MS=1000
+
+# Enterprise Alerting Integrations
+SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/000000000000000000/XXXXXXXXXXXXXXXXXXXXXXXXXXXX
+RESEND_API_KEY=re_123456789abcdef
+ALERT_EMAIL_RECIPIENT=devops-alerts@enterprise-firm.com

@@ -1,0 +1,4 @@
+SOLANA_RPC_URL="https://api.mainnet-beta.solana.com"
+WEBHOOK_ALERT_URL="https://api.example.com/webhooks/alerts/placeholder"
+METRICS_PORT=9102
+CONTENTION_THRESHOLD=0.35

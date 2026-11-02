@@ -1,0 +1,11 @@
+🧵 1/3: How do Solana validators REALLY order transactions inside a block?
+Forget the EVM mempool. Solana uses Gulf Stream + TPU Banking Stage + Sealevel parallel scheduling.
+Here is what actually happens when you submit a tx — and why transactions drop even with high fees 👇 
+
+🧵 2/3: Each 400ms slot has a 48M Compute Unit cap, but write-locks face a hard 12M CU limit (25%).
+Contending for the same AMM pool? You’re serialized into a single banking thread.
+Meanwhile, Jito-Solana bundle auctions bypass vanilla FIFO queues entirely to claim slot-first inclusion.
+
+🧵 3/3: To demystify this, we built Solana-Ordo: a production-grade validator scheduler & write-lock contention profiler with automated Slack/Resend alerting.
+Deterministic Rust simulator + zero-downtime Docker turnkey stack.
+Check out the full open-source repo & architecture breakdown! @solana @solana_devs #Solana #RustLang

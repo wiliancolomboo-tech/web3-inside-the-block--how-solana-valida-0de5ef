@@ -1,0 +1,5 @@
+1/7 Most developers think Solana processes transactions via pure FIFO or random validator drops.
+
+That was true in 2021. Today, inside the block, a deterministic war between PrioGraph DAGs, 12M CU account limits, and Jito MEV bundles takes place.
+
+Here is what ACTUALLY happens inside the BankingStage 🧵👇

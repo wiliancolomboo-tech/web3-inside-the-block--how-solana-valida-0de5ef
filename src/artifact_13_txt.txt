@@ -1,0 +1,8 @@
+running 5 tests
+test test_account_write_lock_limit_saturation ... ok
+test test_block_auditor_clean_report ... ok
+test test_block_max_cu_saturation ... ok
+test test_jito_bundle_tip_preemption ... ok
+test test_priority_ordering_uncontended ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out

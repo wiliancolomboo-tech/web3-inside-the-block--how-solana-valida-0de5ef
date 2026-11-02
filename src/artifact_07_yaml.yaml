@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  block-engine-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: solana-banking-agent
+    restart: unless-stopped
+    environment:
+      - RUST_LOG=info
+      - RPC_URL=https://api.mainnet-beta.solana.com
+      - WEBHOOK_URL=${ENTERPRISE_WEBHOOK_URL}
+    ports:
+      - "9100:9100"
+    command: ["simulate-block", "--tx-count", "5000", "--webhook-url", "${ENTERPRISE_WEBHOOK_URL}"]
+
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: prometheus-telemetry
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"

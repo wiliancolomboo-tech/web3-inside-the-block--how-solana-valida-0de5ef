@@ -1,0 +1,3 @@
+SOLANA_RPC_URL="https://your-dedicated-solana-rpc.mainnet.quiknode.pro/"
+RESEND_API_KEY="re_live_enterprise_secret_key"
+ALERT_WEBHOOK_URL="https://discord.com/api/webhooks/YOUR_CHANNEL_ID/WEBHOOK_TOKEN"

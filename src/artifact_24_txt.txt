@@ -1,0 +1,4 @@
+2/ It comes down to 3 interlocking engines:
+⚡ SWQoS throttles QUIC packets before SigVerify even touches them.
+🔒 Read/Write Account Locks: 2 txs touching different state execute in parallel across worker threads. Contend on Raydium/Orca pools? You stall.
+📈 Priority fees (micro-lamports / CU) rank the Central Scheduler queue, while @jito_labs bundles take the fast-track atomic auction lane.

@@ -1,0 +1,11 @@
+---
+
+# 5. Comprehensive Test Suite & QA Matrix
+
+The test suite validates:
+1. Deterministic micro-auction sorting: Highest MicroLamports/CU executed first.
+2. Two-dimensional read/write account lock conflict graph: Orthogonal accounts parallelize; overlapping writes defer to next batch.
+3. Strict enforcement of per-account 12M CU limits and block 48M total limit.
+4. Jito atomic bundles: All transactions execute uninterrupted or abort atomically.
+
+### `tests/ordering_tests.rs`

@@ -1,0 +1,13 @@
+1/ How do Solana validators REALLY order transactions inside a block? 🧵
+It's NOT like Ethereum's sequential mempool gas auction.
+Solana processes up to 48M Compute Units in parallel across SVM worker threads using a deterministic Read/Write Lock Graph.
+Here's the deep dive 👇
+
+2/ The 4 Critical Rules:
+• Global limit: 48M CU per block.
+• Hotspot ceiling: No single write-account can exceed 12M CU (25%).
+• Non-conflicting accounts execute simultaneously across threads.
+• Jito bundles bypass normal BankingStage priority heaps to execute atomically without sandwich risk.
+
+3/ We built "Solana-BlockScope": An enterprise validator BankingStage & lock-graph analyzer with automated telemetry to detect account contention bottlenecks in real-time.
+Full open-source Rust engine + TS Profiler ready for production! ⚡️🦀

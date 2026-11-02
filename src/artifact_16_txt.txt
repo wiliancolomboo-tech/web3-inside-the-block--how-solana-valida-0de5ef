@@ -1,0 +1,14 @@
++-----------------------------------------------------------------------------------------+
+|                              OPERATIONAL RUNBOOK MATRIX                                 |
++-----------------------------------------------------------------------------------------+
+| Alert Condition       | Root Cause                   | Automated Remediation            |
++-----------------------+------------------------------+----------------------------------+
+| Account CU > 10.5M    | Hot AMM pool saturation      | Split state into multiple PDAs;  |
+|                       | (near 12M write limit)       | defer low-priority volume.       |
+|                       |                              |                                  |
+| Block CU > 44M        | High slot density            | Escalate micro-lamport fee       |
+|                       |                              | compute-budget parameter.        |
+|                       |                              |                                  |
+| Bundle Revert Rate>0% | Out-of-order state conflict  | Check write-lock overlap against |
+|                       | with prior bundle            | top of mempool bundles.          |
++-----------------------+------------------------------+----------------------------------+

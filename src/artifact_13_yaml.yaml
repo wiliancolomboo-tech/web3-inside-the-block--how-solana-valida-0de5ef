@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  solana-orderer-inspector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: solana-block-inspector
+    restart: unless-stopped
+    environment:
+      - RUST_LOG=info
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - ALERT_EMAIL=${ALERT_EMAIL}
+      - WORKER_THREADS=8
+    command: ["simulate-slot", "--slot", "291000100", "--tx-count", "5000", "--bundle-count", "50"]
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'ok' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
