@@ -14,7 +14,7 @@ services:
       - RUST_LOG=info
       - SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
       - WORKER_THREADS=8
-      - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/dummy_enterprise_webhook
+      - DISCORD_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
       - MAX_BLOCK_CU=48000000
       - MAX_ACCOUNT_CU=12000000
     deploy:

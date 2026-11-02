@@ -1,55 +1,40 @@
 flowchart TD
-    subgraph ClientAndIngress["1. Ingress & Routing (Gulf Stream)"]
-        TxClient["Client / Bot / DApp"] -->|"Direct QUIC Packet Stream"| QUIC["Validator TPU Ingress (QUIC Socket)"]
-        LeaderSched["Stake-Weighted Leader Schedule"] -.->|"Predicts Next Slot Leaders"| TxClient
-        QUIC -->|"Receive Stage (Rate Limited per IP/Stake)"| FetchStage["Fetch Stage Buffers"]
+    subgraph Network Layer [1. Network Ingestion: Gulf Stream & QUIC]
+        TX[Client / RPC Transactions] -->|QUIC Packet Streams| TPU_QUIC[TPU QUIC Port :8003]
+        JITO_TX[Jito Searcher Bundles] -->|gRPC Stream| JITO_ENGINE[Jito Block Engine / Relayer]
     end
 
-    subgraph SigVerifyStage["2. Cryptographic Validation"]
-        FetchStage -->|"Raw Packets"| SigVerify["SigVerify Stage (AVX2 / CUDA SIMD)"]
-        SigVerify -->|"Drop Invalid Signatures"| DiscardInvalid["Discard / Blackhole"]
-        SigVerify -->|"Verified Packets"| ChannelQueue["BankingStage Packet Queue"]
-    end
-
-    subgraph BankingStageCore["3. BankingStage: Ordering & Scheduling"]
-        direction TB
-        ChannelQueue --> SchedulerInput["Scheduler Decision Engine"]
+    subgraph TPU Pipeline [2. Agave Validator TPU Internal Pipeline]
+        TPU_QUIC -->|Packet Batches| SIG_VERIFY[SigVerify Stage - AVX2/GPU]
+        SIG_VERIFY -->|Verified Packets| PKT_ROUTER{Banking Scheduler Mode}
         
-        subgraph CentralScheduler["Central Scheduler & Conflict Resolver"]
-            SchedulerInput --> PrioCalc["Calculate Priority Metric: (PriorityFee / CULimit)"]
-            SchedulerInput --> JitoBundleCheck{"Is Jito Block Engine Bundle?"}
-            JitoBundleCheck -- Yes --> TipSorter["Evaluate Jito Tip Bid (Atomic Sequence)"]
-            JitoBundleCheck -- No --> RegularSorter["Sort by micro-lamport/CU Bid"]
+        PKT_ROUTER -->|Default Multi-Thread| BANKING_CHANNELS[Worker Banking Threads 0..N]
+        PKT_ROUTER -->|Central Scheduler| PRIORITY_QUEUE[Prio-Fee Priority Queue]
+        
+        JITO_ENGINE -->|Atomic Bundles| BUNDLE_STAGE[Jito Bundle Stage Patch]
+        BUNDLE_STAGE -->|Top-of-Block Injection| BANKING_CHANNELS
+        
+        subgraph Sealevel Execution [3. Lock Graph & Sealevel Runtime]
+            BANKING_CHANNELS --> WRITE_LOCK_CHECK{Account Write-Lock Free?}
+            PRIORITY_QUEUE --> WRITE_LOCK_CHECK
             
-            TipSorter --> ConflictMatrix["Dynamic Write-Lock Conflict Graph"]
-            RegularSorter --> ConflictMatrix
-            
-            ConflictMatrix --> LockCheck{"Account Write-Lock Contention?"}
-            LockCheck -- "Conflict / Max Account CU Hit (>12M CU)" --> StagingBuffer["Staged / Deferred to Next Batch"]
-            LockCheck -- "Disjoint / Free Locks" --> AssignThread["Assign to Worker Thread Bank"]
-        end
-
-        subgraph WorkerPool["Parallel Sealevel Runtime Workers"]
-            AssignThread --> Worker1["Worker Thread 1 (Account Set A)"]
-            AssignThread --> Worker2["Worker Thread 2 (Account Set B)"]
-            AssignThread --> WorkerN["Worker Thread N (Account Set ...)"]
+            WRITE_LOCK_CHECK -->|No Conflict| SEALEVEL_RUN[Parallel Sealevel VM Execution]
+            WRITE_LOCK_CHECK -->|Contended: Max 12M CU| RETRY_BUFFER[Delayed to Next Batch / Thread Drop]
+            RETRY_BUFFER -.->|Reschedule| BANKING_CHANNELS
         end
     end
 
-    subgraph ExecutionAndPoH["4. Execution, PoH Recorder & Broadcast"]
-        Worker1 --> BatchCollector["Executed Transaction Batch"]
-        Worker2 --> BatchCollector
-        WorkerN --> BatchCollector
-        
-        BatchCollector --> PoHRecorder["PoH Recorder (Continuous SHA-256 Hash Ring)"]
-        PoHRecorder --> EntrySlice["Create Block Entries (Ticks & Batches)"]
-        EntrySlice --> ShredStream["Shredder / Broadcast Stage (Turbine)"]
+    subgraph Ledger Finalization [4. PoH Recording & Consensus]
+        SEALEVEL_RUN -->|Executed Tx Entries| POH_RECORDER[Proof of History Recorder & Hasher]
+        POH_RECORDER -->|Entry Stream| SHRED_STREAM[Turbine Shred Generation & Broadcast]
     end
 
-    subgraph TelemetrySubsystem["5. Real-Time Telemetry & Enterprise Alerts"]
-        BatchCollector -.->|"Block Event Stream"| TelemetryDaemon["Solana Block Inspector Service"]
-        TelemetryDaemon --> MetricsEngine["Write-Lock Heatmap & Tip Extraction Engine"]
-        MetricsEngine --> AlertDispatcher{"Alert Threshold Triggered?"}
-        AlertDispatcher -- Yes --> SlackWebhook["Slack / Discord Webhook Notification"]
-        AlertDispatcher -- Yes --> EmailAlert["Resend API Enterprise Alert (High Latency/Congestion)"]
+    subgraph Enterprise Analytics [5. Block Ordering Forensics Engine]
+        SHRED_STREAM -.->|Confirmed Block| GEYSER_RPC[Geyser / RPC Block Listener]
+        GEYSER_RPC --> ANALYZER_CORE[Solana Block Ordering Forensic Engine]
+        ANALYZER_CORE -->|Write-Lock Contention Graph| METRICS_DB[(PostgreSQL / TimescaleDB)]
+        ANALYZER_CORE -->|Priority Inversion & MEV Alert| ALERT_DISPATCHER[Alert Dispatcher]
+        
+        ALERT_DISPATCHER -->|Webhooks| DISCORD_SLACK[Slack / Discord Ops Channel]
+        ALERT_DISPATCHER -->|Transactional Alert| RESEND_API[Resend Enterprise Email API]
     end

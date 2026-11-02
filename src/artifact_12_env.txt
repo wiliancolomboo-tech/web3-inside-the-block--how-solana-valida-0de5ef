@@ -4,4 +4,4 @@ SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 # Notification Integrations
 RESEND_API_KEY=re_1234567890abcdef
 ALERT_EMAIL=security-lead@enterprise.com
-WEBHOOK_URL=https://discord.com/api/webhooks/...
+WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder

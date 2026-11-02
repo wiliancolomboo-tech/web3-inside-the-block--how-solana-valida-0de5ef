@@ -1,7 +1,26 @@
-running 4 tests
-test test_account_compute_unit_limit_capping ... ok
-test test_global_block_compute_limit_capping ... ok
-test test_jito_bundle_preempts_high_microlamport_tx ... ok
-test test_parallel_uncontended_transactions_execute_without_delay ... ok
+1/6 🧵 Ever wondered why your high-priority Solana txs get delayed or reordered inside a block? 
 
-test result: ok. 4 passed; 0 failed; 0 ignored
+Solana has NO public mempool. Instead, the validator's TPU (Transaction Processing Unit) & BankingStage make deterministic execution decisions in real-time. 
+
+Here is how it actually works 👇
+
+2/6 ⚡ Inside the BankingStage:
+Every slot leader receives streams via QUIC. Packets pass GPU/AVX SigVerify into worker threads. 
+
+Transactions aren't just sorted by fee! They are scheduled around Account Write-Locks:
+• Max Block CU: 48M
+• Max Account Write Lock: 12M CU (25%)
+
+3/6 🚨 The Write-Lock Trap:
+If a hot DEX pool hits its 12M CU write limit, even a 10,000,000 micro-lamport fee CANNOT buy you execution in that batch. You are shunted to another thread or pushed to the next slot. This is the #1 cause of "priority fee inversion"!
+
+4/6 📦 Enter Jito-Solana:
+Validators running Jito patches run custom bundle stages. Winning bundles from off-chain auctions bypass normal Banking channels and are written atomically at the top of the block before standard priority-fee transactions execute.
+
+5/6 🛠️ To solve this opacity, we built `solana-block-ordering-engine`:
+An open-source forensic engine that reconstructs Solana block execution graphs, maps account write-lock bottlenecks in real-time, and fires Slack/Discord/Resend alerts for transaction inversions!
+
+6/6 Check out our full open-source architecture and benchmark report! Built for the Solana community and validator ecosystem. 
+
+Github & Docs: https://github.com/your-org/solana-block-ordering-engine 🚀
+#Solana #MEV #Rust #BlockchainArchitecture @solana

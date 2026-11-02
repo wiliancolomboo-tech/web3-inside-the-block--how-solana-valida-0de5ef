@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
     environment:
       - RUST_LOG=info,sbei_core=debug,sbei_cli=debug
-      - ENTERPRISE_WEBHOOK_URL=https://discord.com/api/webhooks/your-channel/your-webhook-token
+      - ENTERPRISE_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
     command: ["--threads", "8", "--slots", "1000"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9090/healthz || exit 0"]

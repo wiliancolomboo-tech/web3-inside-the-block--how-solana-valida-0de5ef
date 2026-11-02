@@ -1,5 +1,5 @@
 SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
-ENTERPRISE_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN
+ENTERPRISE_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
 RESEND_API_KEY=re_1234567890abcdef
 ALERT_EMAIL_RECIPIENT=devops@solana-validator.network
 PORT=9100

@@ -1,92 +1,113 @@
-use crate::types::Pubkey;
-use std::collections::{HashMap, HashSet};
+mod analyzer;
+mod integrations;
+mod types;
 
-#[derive(Debug, Default)]
-pub struct LockTable {
-    write_locks: HashSet<Pubkey>,
-    read_locks: HashMap<Pubkey, u32>,
-    account_compute_accumulated: HashMap<Pubkey, u64>,
+use analyzer::BlockOrderingAnalyzer;
+use clap::Parser;
+use integrations::EnterpriseAlertDispatcher;
+use solana_client::rpc_client::RpcClient;
+use solana_client::rpc_config::RpcBlockConfig;
+use solana_transaction_status::{TransactionDetails, UiTransactionEncoding};
+use std::sync::Arc;
+use std::time::Duration;
+use tracing::{error, info, Level};
+use tracing_subscriber::FmtSubscriber;
+
+#[derive(Parser, Debug)]
+#[command(author, version, about = "Solana Validator Transaction Ordering Inspector & Forensic Monitor")]
+struct Cli {
+    #[arg(short, long, env = "SOLANA_RPC_URL", default_value = "https://api.mainnet-beta.solana.com")]
+    rpc_url: String,
+
+    #[arg(short, long, env = "START_SLOT")]
+    slot: Option<u64>,
+
+    #[arg(long, env = "SLACK_WEBHOOK_URL")]
+    slack_webhook: Option<String>,
+
+    #[arg(long, env = "DISCORD_WEBHOOK_URL")]
+    discord_webhook: Option<String>,
+
+    #[arg(long, env = "RESEND_API_KEY")]
+    resend_api_key: Option<String>,
+
+    #[arg(long, env = "RESEND_RECIPIENT")]
+    resend_recipient: Option<String>,
+
+    #[arg(long, default_value_t = false)]
+    continuous: bool,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum LockError {
-    WriteConflict(Pubkey),
-    ReadConflict(Pubkey),
-    AccountComputeExceeded(Pubkey),
-}
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let subscriber = FmtSubscriber::builder()
+        .with_max_level(Level::INFO)
+        .finish();
+    tracing::subscriber::set_global_default(subscriber)?;
 
-impl LockTable {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    let cli = Cli::parse();
+    info!("Starting Solana Validator Block Ordering Inspector...");
+    info!("RPC Endpoint: {}", cli.rpc_url);
 
-    /// Try to acquire read/write locks and assert CU limits per account
-    pub fn try_lock(
-        &mut self,
-        read_keys: &[Pubkey],
-        write_keys: &[Pubkey],
-        cu_required: u64,
-        max_cu_per_account: u64,
-    ) -> Result<(), LockError> {
-        // 1. Check write lock collisions against existing write locks
-        for key in write_keys {
-            if self.write_locks.contains(key) {
-                return Err(LockError::WriteConflict(*key));
-            }
-            if self.read_locks.get(key).copied().unwrap_or(0) > 0 {
-                return Err(LockError::ReadConflict(*key));
-            }
-            let current_cu = self.account_compute_accumulated.get(key).copied().unwrap_or(0);
-            if current_cu.saturating_add(cu_required) > max_cu_per_account {
-                return Err(LockError::AccountComputeExceeded(*key));
-            }
-        }
+    let rpc_client = Arc::new(RpcClient::new_with_timeout(cli.rpc_url.clone(), Duration::from_secs(30)));
+    let dispatcher = EnterpriseAlertDispatcher::new(
+        cli.slack_webhook,
+        cli.discord_webhook,
+        cli.resend_api_key,
+        cli.resend_recipient,
+    );
 
-        // 2. Check read lock collisions against existing write locks
-        for key in read_keys {
-            if self.write_locks.contains(key) {
-                return Err(LockError::WriteConflict(*key));
-            }
-        }
+    let mut current_slot = match cli.slot {
+        Some(s) => s,
+        None => rpc_client.get_slot()?,
+    };
 
-        // 3. Commit locks
-        for key in write_keys {
-            self.write_locks.insert(*key);
-            let entry = self.account_compute_accumulated.entry(*key).or_insert(0);
-            *entry = entry.saturating_add(cu_required);
-        }
+    loop {
+        info!("Fetching and analyzing Slot #{}...", current_slot);
 
-        for key in read_keys {
-            let count = self.read_locks.entry(*key).or_insert(0);
-            *count = count.saturating_add(1);
-        }
+        let block_config = RpcBlockConfig {
+            encoding: Some(UiTransactionEncoding::Json),
+            transaction_details: Some(TransactionDetails::Full),
+            rewards: Some(true),
+            commitment: None,
+            max_supported_transaction_version: Some(0),
+        };
 
-        Ok(())
-    }
+        match rpc_client.get_block_with_config(current_slot, block_config) {
+            Ok(block) => {
+                match BlockOrderingAnalyzer::parse_block(current_slot, &block) {
+                    Ok(report) => {
+                        info!(
+                            "Slot #{} Processed: {} txs, {} CU, {} saturated write accounts, {} inversions in {} ms",
+                            report.slot,
+                            report.total_transactions,
+                            report.total_cu_consumed,
+                            report.saturated_write_accounts.len(),
+                            report.priority_inversions_detected.len(),
+                            report.execution_duration_ms
+                        );
 
-    /// Release locks when transaction execution completes
-    pub fn unlock(&mut self, read_keys: &[Pubkey], write_keys: &[Pubkey]) {
-        for key in write_keys {
-            self.write_locks.remove(key);
-        }
-        for key in read_keys {
-            if let Some(count) = self.read_locks.get_mut(key) {
-                if *count <= 1 {
-                    self.read_locks.remove(key);
-                } else {
-                    *count -= 1;
+                        if let Err(e) = dispatcher.dispatch_block_report(&report).await {
+                            error!("Error dispatching alert: {:?}", e);
+                        }
+                    }
+                    Err(e) => {
+                        error!("Failed to parse block {}: {:?}", current_slot, e);
+                    }
                 }
             }
+            Err(e) => {
+                info!("Slot {} was skipped or not yet available: {:?}", current_slot, e);
+            }
         }
+
+        if !cli.continuous {
+            break;
+        }
+
+        current_slot += 1;
+        tokio::time::sleep(Duration::from_millis(450)).await; // Match Solana slot pace
     }
 
-    pub fn get_account_cu(&self, pubkey: &Pubkey) -> u64 {
-        self.account_compute_accumulated.get(pubkey).copied().unwrap_or(0)
-    }
-
-    pub fn reset_slot(&mut self) {
-        self.write_locks.clear();
-        self.read_locks.clear();
-        self.account_compute_accumulated.clear();
-    }
+    Ok(())
 }

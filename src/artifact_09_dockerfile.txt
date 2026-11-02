@@ -1,6 +1,7 @@
-FROM rust:1.75-bullseye AS builder
-WORKDIR /usr/src/solana-block-ordering-engine
+# Multi-stage build for minimal attack surface
+FROM rust:1.79-bullseye AS builder
 
+WORKDIR /usr/src/solana-block-ordering-engine
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 COPY tests ./tests
@@ -8,11 +9,16 @@ COPY tests ./tests
 RUN cargo build --release
 
 FROM debian:bullseye-slim
-RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
-WORKDIR /app
-COPY --from=builder /usr/src/solana-block-ordering-engine/target/release/solana-block-ordering-engine /usr/local/bin/sv-bee
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /usr/src/solana-block-ordering-engine/target/release/solana-block-ordering-engine /usr/local/bin/
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 0
 
 ENV RUST_LOG=info
-EXPOSE 9090
-
-ENTRYPOINT ["/usr/local/bin/sv-bee"]
+ENTRYPOINT ["solana-block-ordering-engine"]
+CMD ["--continuous"]

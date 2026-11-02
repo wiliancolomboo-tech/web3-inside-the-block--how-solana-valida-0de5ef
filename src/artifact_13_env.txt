@@ -1,4 +1,4 @@
 SOLANA_RPC_URL=https://your-dedicated-solana-rpc.com
    SOLANA_WS_URL=wss://your-dedicated-solana-rpc.com
-   DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/xxx/yyy
+   DISCORD_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
    SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder

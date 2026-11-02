@@ -9,37 +9,37 @@
   "ecosystem": "Solana",
   "github_url": "https://github.com/wiliancolomboo-tech/web3-inside-the-block--how-solana-valida-0de5ef",
   "hf_space_url": null,
-  "status": "ready_for_submission",
+  "status": "validation_warning",
   "validation_reports": [
     {
-      "file": "artifact_01_txt.txt",
-      "language": "txt",
-      "valid": true,
-      "error": null
-    },
-    {
-      "file": "artifact_02_mermaid.txt",
+      "file": "artifact_01_mermaid.txt",
       "language": "mermaid",
       "valid": true,
       "error": null
     },
     {
-      "file": "artifact_03_txt.txt",
-      "language": "txt",
+      "file": "artifact_02_toml.toml",
+      "language": "toml",
       "valid": true,
       "error": null
     },
     {
-      "file": "artifact_04_toml.toml",
-      "language": "toml",
+      "file": "artifact_03_rust.rs",
+      "language": "rust",
+      "valid": true,
+      "error": null
+    },
+    {
+      "file": "artifact_04_rust.rs",
+      "language": "rust",
       "valid": true,
       "error": null
     },
     {
       "file": "artifact_05_rust.rs",
       "language": "rust",
-      "valid": true,
-      "error": null
+      "valid": false,
+      "error": "Unclosed bracket '('"
     },
     {
       "file": "artifact_06_rust.rs",
@@ -54,60 +54,30 @@
       "error": null
     },
     {
-      "file": "artifact_08_rust.rs",
-      "language": "rust",
-      "valid": true,
-      "error": null
-    },
-    {
-      "file": "artifact_09_rust.rs",
-      "language": "rust",
-      "valid": true,
-      "error": null
-    },
-    {
-      "file": "artifact_10_json.json",
-      "language": "json",
-      "valid": true,
-      "error": null
-    },
-    {
-      "file": "artifact_11_json.json",
-      "language": "json",
-      "valid": true,
-      "error": null
-    },
-    {
-      "file": "artifact_12_typescript.ts",
-      "language": "typescript",
-      "valid": true,
-      "error": null
-    },
-    {
-      "file": "artifact_13_rust.rs",
-      "language": "rust",
-      "valid": true,
-      "error": null
-    },
-    {
-      "file": "artifact_14_bash.sh",
+      "file": "artifact_08_bash.sh",
       "language": "bash",
       "valid": true,
       "error": null
     },
     {
-      "file": "artifact_15_dockerfile.txt",
+      "file": "artifact_09_dockerfile.txt",
       "language": "dockerfile",
       "valid": true,
       "error": null
     },
     {
-      "file": "artifact_16_yaml.yaml",
+      "file": "artifact_10_yaml.yaml",
       "language": "yaml",
+      "valid": true,
+      "error": null
+    },
+    {
+      "file": "artifact_11_text.txt",
+      "language": "text",
       "valid": true,
       "error": null
     }
   ],
   "git_initialized": true,
-  "created_at": "2026-11-02 23:35:01"
+  "created_at": "2026-11-02 23:46:37"
 }

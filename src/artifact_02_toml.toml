@@ -1,15 +1,22 @@
 [package]
 name = "solana-block-ordering-engine"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
-authors = ["Enterprise Solana Core Architecture Team"]
-description = "Deterministic Solana Banking Stage Transaction Ordering Simulator and Conflict Graph"
+authors = ["Claude Opus 5 Technical Operations"]
+description = "Production forensic engine for Solana validator transaction ordering, lock contention, and MEV bundle analysis."
 
 [dependencies]
-solana-sdk = "1.18.12"
+solana-client = "1.18.26"
+solana-sdk = "1.18.26"
+solana-transaction-status = "1.18.26"
+tokio = { version = "1.38", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+reqwest = { version = "0.12", features = ["json"] }
+chrono = { version = "0.4", features = ["serde"] }
+anyhow = "1.0"
 thiserror = "1.0"
-log = "0.4"
-env_logger = "0.10"
-sha2 = "0.10"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4.5", features = ["derive"] }
+futures = "0.3"

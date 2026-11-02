@@ -1,3 +1,3 @@
 SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
-DISCORD_SLACK_WEBHOOK_URL=https://discord.com/api/webhooks/your_token_here
+DISCORD_SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
 RUST_LOG=info

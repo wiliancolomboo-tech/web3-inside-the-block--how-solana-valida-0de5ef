@@ -1,19 +1,21 @@
 version: '3.8'
 
 services:
-  sv-bee-scheduler:
+  solana-ordering-inspector:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: solana-block-scheduler-sentinel
-    restart: always
+    container_name: solana_block_ordering_inspector
+    restart: unless-stopped
     environment:
-      - RUST_LOG=info
-      - ENTERPRISE_WEBHOOK_URL=${ENTERPRISE_WEBHOOK_URL:-}
-    ports:
-      - "9090:9090"
-    healthcheck:
-      test: ["CMD-SHELL", "test -f /usr/local/bin/sv-bee || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+      - SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - RESEND_RECIPIENT=${RESEND_RECIPIENT:-admin@enterprise.internal}
+      - RUST_LOG=info,solana_block_ordering_engine=debug
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"

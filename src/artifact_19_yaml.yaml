@@ -9,7 +9,7 @@ services:
     restart: always
     environment:
       - SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
-      - ENTERPRISE_WEBHOOK_URL=https://discord.com/api/webhooks/dummy/mock
+      - ENTERPRISE_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
       - POLL_INTERVAL_MS=1000
     ports:
       - "9090:9090"
